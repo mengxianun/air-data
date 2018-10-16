@@ -1,0 +1,1 @@
+include 'all', 'core', 'jdbc', 'elasticsearch'
