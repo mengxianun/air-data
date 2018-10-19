@@ -23,11 +23,11 @@ import org.slf4j.LoggerFactory;
 import com.github.mengxianun.core.AbstractDataContext;
 import com.github.mengxianun.core.Action;
 import com.github.mengxianun.core.DataResultSet;
-import com.github.mengxianun.core.DefaultDataResultSet;
 import com.github.mengxianun.core.MetaData;
 import com.github.mengxianun.core.ResultStatus;
 import com.github.mengxianun.core.SQLBuilder;
 import com.github.mengxianun.core.attributes.ResultAttributes;
+import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.json.JsonAttributes;
 import com.github.mengxianun.core.schema.DefaultColumn;
 import com.github.mengxianun.core.schema.DefaultSchema;
@@ -323,8 +323,7 @@ public class JdbcDataContext extends AbstractDataContext {
 	}
 
 	@Override
-	public DataResultSet action(Action action) {
-		long took = 0;
+	public Object action(Action action) {
 		Object data = null;
 		SQLBuilder sqlBuilder = new SQLBuilder(action);
 		String sql = sqlBuilder.getSql();
@@ -346,13 +345,13 @@ public class JdbcDataContext extends AbstractDataContext {
 			}
 		} catch (SQLException e) {
 			logger.error("json execution failed", e);
-			return new DefaultDataResultSet(ResultStatus.BAD_REQUEST);
+			throw new DataException(ResultStatus.BAD_REQUEST);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("SQL: {}", sql);
 			logger.debug("Params: {}", params);
 		}
-		return new DefaultDataResultSet(took, data);
+		return data;
 	}
 
 	@Override
@@ -362,8 +361,7 @@ public class JdbcDataContext extends AbstractDataContext {
 	}
 
 	@Override
-	public DataResultSet executeNative(String script) {
-		long took = 0;
+	public Object executeNative(String script) {
 		Object data = null;
 		script = script.trim();
 		try {
@@ -380,13 +378,13 @@ public class JdbcDataContext extends AbstractDataContext {
 				map.put(ResultAttributes.COUNT.toString().toLowerCase(), count);
 			}
 		} catch (SQLException e) {
-			logger.error("Script execution failed");
-			return new DefaultDataResultSet(ResultStatus.BAD_REQUEST);
+			logger.error("Script execution failed", e);
+			throw new DataException(ResultStatus.BAD_REQUEST);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("NATIVE: {}", script);
 		}
-		return new DefaultDataResultSet(took, data);
+		return data;
 	}
 
 }

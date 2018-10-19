@@ -1,6 +1,9 @@
 package com.github.mengxianun.jdbc;
 
-public class JdbcDataException extends RuntimeException {
+import com.github.mengxianun.core.ResultStatus;
+import com.github.mengxianun.core.exception.DataException;
+
+public class JdbcDataException extends DataException {
 
 	private static final long serialVersionUID = 1L;
 
@@ -22,6 +25,10 @@ public class JdbcDataException extends RuntimeException {
 
 	public JdbcDataException(Throwable cause) {
 		super(cause);
+	}
+
+	public JdbcDataException(ResultStatus resultStatus) {
+		this.resultStatus = resultStatus;
 	}
 
 }

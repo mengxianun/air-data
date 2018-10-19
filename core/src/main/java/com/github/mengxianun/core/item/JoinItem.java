@@ -1,40 +1,47 @@
 package com.github.mengxianun.core.item;
 
 import com.github.mengxianun.core.json.JoinType;
-import com.github.mengxianun.core.schema.Column;
 
 public class JoinItem {
 
-	private Column column1;
+	private ColumnItem leftColumn;
 
-	private Column column2;
+	private ColumnItem rightColumn;
 
 	private JoinType joinType;
 
-	public JoinItem(Column column1, Column column2) {
-		this.column1 = column1;
-		this.column2 = column2;
+	public JoinItem(ColumnItem leftColumn, ColumnItem rightColumn) {
+		this.leftColumn = leftColumn;
+		this.rightColumn = rightColumn;
 	}
 
-	public Column getColumn1() {
-		return column1;
+	public JoinItem(ColumnItem leftColumn, ColumnItem rightColumn, JoinType joinType) {
+		this.leftColumn = leftColumn;
+		this.rightColumn = rightColumn;
+		this.joinType = joinType;
 	}
 
-	public void setColumn1(Column column1) {
-		this.column1 = column1;
+	public ColumnItem getLeftColumn() {
+		return leftColumn;
 	}
 
-	public Column getColumn2() {
-		return column2;
+	public void setLeftColumn(ColumnItem leftColumn) {
+		this.leftColumn = leftColumn;
 	}
 
-	public void setColumn2(Column column2) {
-		this.column2 = column2;
+	public ColumnItem getRightColumn() {
+		return rightColumn;
 	}
+
+	public void setRightColumn(ColumnItem rightColumn) {
+		this.rightColumn = rightColumn;
+	}
+
 
 	public JoinType getJoinType() {
 		return joinType;
 	}
+
 
 	public void setJoinType(JoinType joinType) {
 		this.joinType = joinType;

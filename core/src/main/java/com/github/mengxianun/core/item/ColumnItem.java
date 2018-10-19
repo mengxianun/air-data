@@ -5,13 +5,13 @@ import com.github.mengxianun.core.schema.Column;
 public class ColumnItem {
 
 	// 列属性
-	private Column column;
-
+	protected Column column;
 	// 自定义表达式. 可以是列名, 或者函数, 子查询等
-	private String expression;
-
+	protected String expression;
 	// 列别名
-	private String alias;
+	protected String alias;
+	// 所属操作表
+	protected TableItem tableItem;
 
 	public ColumnItem(Column column) {
 		this.column = column;
@@ -20,6 +20,17 @@ public class ColumnItem {
 	public ColumnItem(Column column, String alias) {
 		this.column = column;
 		this.alias = alias;
+	}
+
+	public ColumnItem(Column column, TableItem tableItem) {
+		this.column = column;
+		this.tableItem = tableItem;
+	}
+
+	public ColumnItem(Column column, String alias, TableItem tableItem) {
+		this.column = column;
+		this.alias = alias;
+		this.tableItem = tableItem;
 	}
 
 	public ColumnItem(String expression) {
@@ -53,6 +64,14 @@ public class ColumnItem {
 
 	public void setExpression(String expression) {
 		this.expression = expression;
+	}
+
+	public TableItem getTableItem() {
+		return tableItem;
+	}
+
+	public void setTableItem(TableItem tableItem) {
+		this.tableItem = tableItem;
 	}
 
 }

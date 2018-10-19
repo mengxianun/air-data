@@ -1,16 +1,17 @@
 package com.github.mengxianun.core.schema;
 
+import com.google.gson.JsonObject;
+
 public class DefaultColumn implements Column {
 
 	private String name;
-
 	private Table table;
-
 	private Boolean nullable;
-
 	private String remarks;
-
 	private Integer columnSize;
+	private Column relationColumn;
+	// 自定义配置i信息
+	private JsonObject config = new JsonObject();
 
 	public DefaultColumn() {
 	}
@@ -62,6 +63,16 @@ public class DefaultColumn implements Column {
 		return false;
 	}
 
+	@Override
+	public Column getRelationColumn() {
+		return relationColumn;
+	}
+
+	@Override
+	public JsonObject getConfig() {
+		return config;
+	}
+
 	public void setNullable(Boolean nullable) {
 		this.nullable = nullable;
 	}
@@ -80,6 +91,14 @@ public class DefaultColumn implements Column {
 
 	public void setColumnSize(Integer columnSize) {
 		this.columnSize = columnSize;
+	}
+
+	public void setRelationColumn(Column relationColumn) {
+		this.relationColumn = relationColumn;
+	}
+
+	public void setConfig(JsonObject config) {
+		this.config = config;
 	}
 
 }

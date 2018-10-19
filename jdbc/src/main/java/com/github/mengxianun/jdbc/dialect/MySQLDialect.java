@@ -16,5 +16,9 @@ public class MySQLDialect implements Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean quoteTable() {
+		return true;
+	}
 
 }

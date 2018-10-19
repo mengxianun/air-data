@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.github.mengxianun.core.attributes.AssociationType;
+import com.github.mengxianun.core.attributes.TableConfigAttributes;
+import com.google.gson.JsonObject;
+
 public class DefaultTable implements Table {
 
 	private String name;
-
 	private Schema schema;
-
 	private String remarks;
-
 	private List<Column> columns;
+	// 自定义配置i信息
+	private JsonObject config = new JsonObject();
 
 	public DefaultTable() {
 		this.columns = new ArrayList<>();
@@ -107,6 +110,65 @@ public class DefaultTable implements Table {
 		return remarks;
 	}
 
+	@Override
+	public List<Relationship> getRelationships() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Relationship getRelationship(Table foreignTable) {
+		// 从数据表配置中查找关联
+		if (config.has(TableConfigAttributes.COLUMNS)) {
+			JsonObject columnsConfig = config.getAsJsonObject(TableConfigAttributes.COLUMNS);
+			for (String columnName : columnsConfig.keySet()) {
+				JsonObject columnConfig = columnsConfig.getAsJsonObject(columnName);
+				if (columnConfig.has(TableConfigAttributes.COLUMN_ASSOCIATION)) {
+					JsonObject associationConfig = columnConfig
+							.getAsJsonObject(TableConfigAttributes.COLUMN_ASSOCIATION);
+					String targetTableName = associationConfig
+							.getAsJsonPrimitive(TableConfigAttributes.ASSOCIATION_TARGET_TABLE).getAsString();
+					if (foreignTable.getName().equalsIgnoreCase(targetTableName)) {
+						String targetColumnName = associationConfig
+								.getAsJsonPrimitive(TableConfigAttributes.ASSOCIATION_TARGET_COLUMN).getAsString();
+						AssociationType associationType;
+						if (associationConfig.has(TableConfigAttributes.ASSOCIATION_TYPE)) {
+							String associationTypeString = associationConfig
+									.getAsJsonPrimitive(TableConfigAttributes.ASSOCIATION_TYPE).getAsString();
+							associationType = AssociationType.from(associationTypeString);
+						} else {
+							associationType = AssociationType.ONE_TO_ONE;
+						}
+						Column primaryColumn = getColumnByName(columnName);
+						Column foreignColumn = foreignTable.getColumnByName(targetColumnName);
+						return new DefaultRelationship(primaryColumn, foreignColumn, associationType);
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+
+	@Override
+	public AssociationType getAssociationType(Table foreignTable) {
+		Relationship relationship = getRelationship(foreignTable);
+		if (relationship == null) {
+			relationship = foreignTable.getRelationship(this);
+			if (relationship == null) {
+				return AssociationType.ONE_TO_ONE;
+			}
+			return relationship.getAssociationType().reverse();
+		} else {
+			return relationship.getAssociationType();
+		}
+	}
+
+	@Override
+	public JsonObject getConfig() {
+		return config;
+	}
+
 	public void addColumn(Column column) {
 		columns.add(column);
 	}
@@ -129,6 +191,10 @@ public class DefaultTable implements Table {
 
 	public void setColumns(List<Column> columns) {
 		this.columns = columns;
+	}
+
+	public void setConfig(JsonObject config) {
+		this.config = config;
 	}
 
 }

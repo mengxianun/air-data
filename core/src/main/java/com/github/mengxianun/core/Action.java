@@ -45,34 +45,63 @@ public class Action {
 	}
 
 	public void addTableItem(TableItem tableItem) {
+		if (tableItem == null) {
+			return;
+		}
 		this.tableItems.add(tableItem);
 	}
 
 	public void addColumnItem(ColumnItem columnItem) {
+		if (columnItem == null) {
+			return;
+		}
+		for (ColumnItem existColumnItem : columnItems) {
+			if (existColumnItem.getColumn() == columnItem.getColumn()) {
+				return;
+			}
+		}
 		this.columnItems.add(columnItem);
 	}
 
 	public void addJoinItem(JoinItem joinItem) {
+		if (joinItem == null) {
+			return;
+		}
 		this.joinItems.add(joinItem);
 	}
 
 	public void addFilterItem(FilterItem filterItem) {
+		if (filterItem == null) {
+			return;
+		}
 		this.filterItems.add(filterItem);
 	}
 
 	public void addGroupItem(GroupItem groupItem) {
+		if (groupItem == null) {
+			return;
+		}
 		this.groupItems.add(groupItem);
 	}
 
 	public void addOrderItem(OrderItem orderItem) {
+		if (orderItem == null) {
+			return;
+		}
 		this.orderItems.add(orderItem);
 	}
 
 	public void addLimitItem(LimitItem limitItem) {
+		if (limitItem == null) {
+			return;
+		}
 		this.limitItem = limitItem;
 	}
 
 	public void addValueItem(ValueItem valueItem) {
+		if (valueItem == null) {
+			return;
+		}
 		this.valueItems.add(valueItem);
 	}
 

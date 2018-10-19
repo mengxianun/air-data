@@ -17,10 +17,9 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.mengxianun.core.DataResultSet;
-import com.github.mengxianun.core.DefaultDataResultSet;
 import com.github.mengxianun.core.DefaultDialect;
 import com.github.mengxianun.core.ResultStatus;
+import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.schema.DefaultColumn;
 import com.github.mengxianun.core.schema.DefaultSchema;
 import com.github.mengxianun.core.schema.DefaultTable;
@@ -86,7 +85,7 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 	}
 
 	@Override
-	public DataResultSet executeNative(Table table, String script) {
+	public Object executeNative(Table table, String script) {
 		String responseBody = null;
 		try {
 			NStringEntity nStringEntity = new NStringEntity(script, ContentType.APPLICATION_JSON);
@@ -94,10 +93,10 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 			responseBody = EntityUtils.toString(response.getEntity());
 		} catch (ParseException | IOException e) {
 			logger.error("Native statement execution failed", e);
-			return new DefaultDataResultSet(ResultStatus.BAD_REQUEST);
+			throw new DataException(ResultStatus.BAD_REQUEST);
 		}
 		JsonObject responseObject = new JsonParser().parse(responseBody).getAsJsonObject();
-		return new DefaultDataResultSet(responseObject);
+		return responseObject;
 	}
 
 }

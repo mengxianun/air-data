@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 public class DefaultSchema implements Schema {
 
 	private String name;
-
 	private List<Table> tables;
 
 	public DefaultSchema() {

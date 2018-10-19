@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
-import com.github.mengxianun.core.item.ColumnItem;
 import com.opencsv.CSVWriterBuilder;
 import com.opencsv.ICSVWriter;
 
@@ -16,11 +14,10 @@ public abstract class AbstractDataResultSet implements DataResultSet {
 
 	protected long took;
 
-	protected List<ColumnItem> columnItems;
-
 	protected Object data;
 
-	protected ResultStatus resultStatus;
+	protected int code;
+	protected String message;
 
 	public AbstractDataResultSet() {
 
@@ -29,11 +26,18 @@ public abstract class AbstractDataResultSet implements DataResultSet {
 	public AbstractDataResultSet(long took, Object data) {
 		this.took = took;
 		this.data = data;
-		this.resultStatus = ResultStatus.SUCCESS;
+		this.code = ResultStatus.SUCCESS.code();
+		this.message = ResultStatus.SUCCESS.message();
+	}
+
+	public AbstractDataResultSet(int code, String message) {
+		this.code = code;
+		this.message = message;
 	}
 
 	public AbstractDataResultSet(ResultStatus resultStatus) {
-		this.resultStatus = resultStatus;
+		this.code = ResultStatus.SUCCESS.code();
+		this.message = ResultStatus.SUCCESS.message();
 	}
 
 	@Override
@@ -65,11 +69,19 @@ public abstract class AbstractDataResultSet implements DataResultSet {
 	}
 
 	public int getCode() {
-		return resultStatus.code();
+		return code;
+	}
+
+	public void setCode(int code) {
+		this.code = code;
 	}
 
 	public String getMessage() {
-		return resultStatus.message();
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
 }

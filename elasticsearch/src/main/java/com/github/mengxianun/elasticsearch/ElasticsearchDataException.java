@@ -1,6 +1,9 @@
 package com.github.mengxianun.elasticsearch;
 
-public class ElasticsearchDataException extends RuntimeException {
+import com.github.mengxianun.core.ResultStatus;
+import com.github.mengxianun.core.exception.DataException;
+
+public class ElasticsearchDataException extends DataException {
 
 	private static final long serialVersionUID = 1L;
 
@@ -25,5 +28,8 @@ public class ElasticsearchDataException extends RuntimeException {
 		super(cause);
 	}
 
+	public ElasticsearchDataException(ResultStatus resultStatus) {
+		this.resultStatus = resultStatus;
+	}
 
 }

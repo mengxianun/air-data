@@ -2,6 +2,8 @@ package com.github.mengxianun.core.attributes;
 
 public interface ConfigAttributes {
 
+	// 配置文件
+	public static final String CONFIG_FILE = "config_file";
 	// 数据源
 	public static final String DATASOURCES = "datasources";
 	// 数据源类型

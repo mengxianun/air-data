@@ -12,5 +12,9 @@ public class DefaultDialect implements Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean quoteTable() {
+		return false;
+	}
 
 }

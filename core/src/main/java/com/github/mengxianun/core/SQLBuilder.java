@@ -42,7 +42,7 @@ public class SQLBuilder {
 
 	public static final String COLUMN_ALL = "*";
 	// 字段别名关联字符串
-	public static final String COLUMN_ALIAS_KEY = " AS ";
+	public static final String ALIAS_KEY = " AS ";
 
 	public static final String PREFIX_INSERT_INTO = "INSERT INTO ";
 	public static final String PREFIX_UPDATE = "UPDATE ";
@@ -126,15 +126,21 @@ public class SQLBuilder {
 				}
 				Column column = columnItem.getColumn();
 				if (column != null) {
-					String tableName = column.getTable().getName();
-					String columnName = column.getName();
-					columnsBuilder.append(quote(tableName)).append(".").append(quote(columnName));
+					TableItem tableItem = columnItem.getTableItem();
+					if (tableItem != null) { // 列所属表指定了别名
+						String tableAlias = tableItem.getAlias();
+						columnsBuilder.append(tableAlias);
+					} else { // 列所属表没有指定别名, 使用真实表名作为前缀
+						String tableName = column.getTable().getName();
+						columnsBuilder.append(quote(tableName));
+					}
+					columnsBuilder.append(".").append(quote(column.getName()));
 				} else {
 					columnsBuilder.append(columnItem.getExpression());
 				}
 				String alias = columnItem.getAlias();
 				if (!Strings.isNullOrEmpty(alias)) {
-					columnsBuilder.append(COLUMN_ALIAS_KEY).append(alias);
+					columnsBuilder.append(ALIAS_KEY).append(alias);
 				}
 				comma = true;
 			}
@@ -163,7 +169,7 @@ public class SQLBuilder {
 			}
 			String alias = tableItem.getAlias();
 			if (!Strings.isNullOrEmpty(alias)) {
-				tablesBuilder.append(COLUMN_ALIAS_KEY).append(alias);
+				tablesBuilder.append(ALIAS_KEY).append(alias);
 			}
 			comma = true;
 		}
@@ -194,14 +200,36 @@ public class SQLBuilder {
 			default:
 				throw new DataException(String.format("wrong join type [%s]", joinItem.getJoinType()));
 			}
+			// join left table
+			ColumnItem leftColumnItem = joinItem.getLeftColumn();
+			TableItem leftTableItem = leftColumnItem.getTableItem();
+			Table leftTable = leftTableItem.getTable();
+			String leftTableAlias = leftTableItem.getAlias();
+			// join right table
+			ColumnItem rightColumnItem = joinItem.getRightColumn();
+			TableItem rightTableItem = rightColumnItem.getTableItem();
+			Table rightTable = rightTableItem.getTable();
+			String rightTableAlias = rightTableItem.getAlias();
+
+			joinsBuilder.append(quote(rightTable.getName()));
+			if (!Strings.isNullOrEmpty(rightTableAlias)) {
+				joinsBuilder.append(ALIAS_KEY).append(rightTableAlias);
+			}
 			joinsBuilder.append(JOIN_ON);
-			Column column1 = joinItem.getColumn1();
-			Table table1 = column1.getTable();
-			Column column2 = joinItem.getColumn2();
-			Table table2 = column2.getTable();
-			joinsBuilder.append(quote(table1.getName())).append(".").append(quote(column1.getName()));
+
+			if (Strings.isNullOrEmpty(leftTableAlias)) {
+				joinsBuilder.append(quote(leftTable.getName()));
+			} else {
+				joinsBuilder.append(leftTableAlias);
+			}
+			joinsBuilder.append(".").append(quote(leftColumnItem.getColumn().getName()));
 			joinsBuilder.append(" = ");
-			joinsBuilder.append(quote(table2.getName())).append(".").append(quote(column2.getName()));
+			if (Strings.isNullOrEmpty(rightTableAlias)) {
+				joinsBuilder.append(quote(rightTable.getName()));
+			} else {
+				joinsBuilder.append(rightTableAlias);
+			}
+			joinsBuilder.append(".").append(quote(rightColumnItem.getColumn().getName()));
 		}
 		return joinsBuilder.toString();
 	}
@@ -424,8 +452,17 @@ public class SQLBuilder {
 		}
 	}
 
-	public String quote(String key) {
-		return dataContext.getIdentifierQuoteString() + key + dataContext.getIdentifierQuoteString();
+	/**
+	 * 用引用符号包裹数据元素
+	 * 
+	 * @param element
+	 * @return
+	 */
+	public String quote(String element) {
+		if (dataContext.getDialect().quoteTable()) {
+			return dataContext.getIdentifierQuoteString() + element + dataContext.getIdentifierQuoteString();
+		}
+		return element;
 	}
 
 	public String getSql() {
