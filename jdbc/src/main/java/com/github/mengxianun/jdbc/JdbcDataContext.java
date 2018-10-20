@@ -342,6 +342,7 @@ public class JdbcDataContext extends AbstractDataContext {
 				int count = runner.update(sql, params.toArray());
 				Map<String, Object> map = new HashMap<>();
 				map.put(ResultAttributes.COUNT.toString().toLowerCase(), count);
+				data = map;
 			}
 		} catch (SQLException e) {
 			logger.error("json execution failed", e);

@@ -225,10 +225,8 @@ public class JsonParser {
 		List<JoinElement> joinElements = new ArrayList<>();
 		JsonElement joinsElement = jsonData.get(JsonAttributes.JOIN);
 		if (joinsElement.isJsonArray()) {
-			// ((JsonArray) joinsElement).forEach(e -> parseJoin(e));
 			((JsonArray) joinsElement).forEach(e -> joinElements.add(parseJoinTable(e)));
 		} else {
-			// parseJoinTable(joinsElement);
 			joinElements.add(parseJoinTable(joinsElement));
 		}
 		createJoin(joinElements);
@@ -242,12 +240,10 @@ public class JsonParser {
 			String joinTypeString = joinObject.keySet().iterator().next();
 			JoinType joinType = JoinType.from(joinTypeString);
 			String joinTableName = joinObject.getAsJsonPrimitive(joinTypeString).getAsString();
-			// action.addJoinItem(parseJoin(joinTableName, joinType));
 			return parseJoin(joinTableName, joinType);
 		} else {
 			String joinTableName = joinElement.getAsString();
 			// 默认关联类型 LEFT
-			// action.addJoinItem(parseJoin(joinTableName, JoinType.LEFT));
 			return parseJoin(joinTableName, JoinType.LEFT);
 		}
 	}
@@ -260,19 +256,6 @@ public class JsonParser {
 		}
 		TableItem joinTableItem = new TableItem(joinTable, joinTableAlias);
 		return new JoinElement(joinTableItem, joinType);
-		// 这里暂时只支持单个主表的情况
-		// TableItem tableItem = action.getTableItems().get(0);
-		// Relationship relationship = tableItem.getTable().getRelationship(joinTable);
-		// if (relationship != null) {
-		// Column primaryColumn = relationship.getPrimaryColumn();
-		// Column foreignColumn = relationship.getForeignColumn();
-		// ColumnItem primaryColumnItem = new ColumnItem(primaryColumn, tableItem);
-		// ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, joinTableItem);
-		// return new JoinItem(primaryColumnItem, foreignColumnItem, joinType);
-		// }
-		// throw new DataException(
-		// String.format("Association relation for the join table [%s] was not found",
-		// joinTableName));
 	}
 
 	/**
@@ -283,8 +266,6 @@ public class JsonParser {
 	public void createJoin(List<JoinElement> joinElements) {
 		TableItem tableItem = action.getTableItems().get(0);
 		Table table = tableItem.getTable();
-		// JsonObject resultStruct = new JsonObject();
-		// action.setResultStruct(resultStruct);
 		// 关联主表的 join 表
 		List<JoinElement> joinsInMainTable = new ArrayList<>();
 		for (JoinElement joinElement : joinElements) {
@@ -300,8 +281,6 @@ public class JsonParser {
 				ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, joinTableItem);
 				action.addJoinItem(new JoinItem(primaryColumnItem, foreignColumnItem, joinType));
 				joinsInMainTable.add(joinElement);
-				// resultStruct.add(joinTable.getName(), new JsonObject());
-				// joinElement.addTable(table.getName());
 				tempJoins.add(Lists.newArrayList(table, joinTable));
 			} else {
 				// 2. join 表关联主表 (数据表配置文件中的配置)
@@ -314,8 +293,6 @@ public class JsonParser {
 					ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, tableItem);
 					action.addJoinItem(new JoinItem(foreignColumnItem, primaryColumnItem, joinType));
 					joinsInMainTable.add(joinElement);
-					// resultStruct.add(joinTable.getName(), new JsonObject());
-					// joinElement.addTable(table.getName());
 					tempJoins.add(Lists.newArrayList(table, joinTable));
 				}
 			}
@@ -348,27 +325,23 @@ public class JsonParser {
 				TableItem unknownTableItem = unknownJoinElement.getJoinTableItem();
 				Table unknownTable = unknownTableItem.getTable();
 				Relationship relationship = knownTable.getRelationship(unknownTable);
+				ColumnItem primaryColumnItem;
+				ColumnItem foreignColumnItem;
 				if (relationship != null) {
-					Column primaryColumn = relationship.getPrimaryColumn();
-					Column foreignColumn = relationship.getForeignColumn();
-					ColumnItem primaryColumnItem = new ColumnItem(primaryColumn, knownTableItem);
-					ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, unknownTableItem);
+					primaryColumnItem = new ColumnItem(relationship.getPrimaryColumn(), knownTableItem);
+					foreignColumnItem = new ColumnItem(relationship.getForeignColumn(), unknownTableItem);
 					action.addJoinItem(new JoinItem(primaryColumnItem, foreignColumnItem, joinType));
+				} else {
+					relationship = unknownTable.getRelationship(knownTable);
+					if (relationship != null) {
+						// 这里主表和 join 表调换, 因为操作是以主表为主
+						primaryColumnItem = new ColumnItem(relationship.getPrimaryColumn(), unknownTableItem);
+						foreignColumnItem = new ColumnItem(relationship.getForeignColumn(), knownTableItem);
+						action.addJoinItem(new JoinItem(foreignColumnItem, primaryColumnItem, joinType));
+					}
+				}
+				if (relationship != null) {
 					findJoinElements.add(unknownJoinElement);
-					// unknownJoinElement.addTable(knownTable.getName());
-					// 添加结果结构元素
-					// JsonObject resultStruct = action.getResultStruct();
-					// JsonObject subResultStruct;
-					// 获取上级结构对象
-					// List<String> tables = unknownJoinElement.getTables();
-					// for (String table : tables) {
-					// subResultStruct = resultStruct.getAsJsonObject(table);
-					// }
-					// 获取父级结构对象
-					// subResultStruct = resultStruct.getAsJsonObject(knownTable.getName());
-					// 添加当前 join 表的结构元素
-					// subResultStruct.add(unknownTable.getName(), new JsonObject());
-
 					// 查找关联表的列的关联信息
 					int parentTableIndex = -1;
 					over: for (int i = 0; i < tempJoins.size(); i++) {
@@ -609,16 +582,10 @@ public class JsonParser {
 		over: for (List<Table> tables : tempJoins) {
 			for (int i = tables.size() - 1; i > 0; i--) {
 				if (joinTable.getName().equals(tables.get(i).getName())) {
-					// List<Table> parentTables = new ArrayList<>();
-					// joinColumnItem.setParentTables(parentTables);
-					// Table parentTable = tables.get(--i);
 					// 添加所有父级关联表
 					for (int j = 0; j < i; j++) {
 						joinColumnItem.addParentTable(tables.get(j));
 					}
-					// Relationship relationship = parentTable.getRelationship(tables.get(i));
-					// joinColumnItem.setAssociationType(relationship.getAssociationType());
-					// over = true;
 					break over;
 				}
 			}
@@ -946,7 +913,7 @@ public class JsonParser {
 		} else {
 			JsonObject values = (JsonObject) valuesElement;
 			for (String columnName : values.keySet()) {
-				String value = values.getAsString();
+				String value = values.getAsJsonPrimitive(columnName).getAsString();
 				Column column = findColumn(columnName);
 				if (column != null) {
 					action.addValueItem(new ValueItem(column, value));
@@ -989,7 +956,7 @@ public class JsonParser {
 		List<TableItem> tableItems = action.getTableItems();
 		for (TableItem tableItem : tableItems) {
 			List<Column> columns = tableItem.getTable().getColumns();
-			Optional<Column> optionalColumn = columns.stream().filter(c -> c.getName().equals(columnString))
+			Optional<Column> optionalColumn = columns.stream().filter(c -> c.getName().equalsIgnoreCase(columnString))
 					.findFirst();
 			if (optionalColumn.isPresent()) {
 				return optionalColumn.get();

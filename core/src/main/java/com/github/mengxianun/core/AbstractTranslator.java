@@ -186,7 +186,7 @@ public abstract class AbstractTranslator implements Translator {
 				}
 			}
 		} catch (JsonIOException | JsonSyntaxException | FileNotFoundException e) {
-			throw new DataException("Parsing table config file failed", e);
+			throw new DataException(String.format("Parsing table config file [%s] failed", path), e);
 		}
 	}
 

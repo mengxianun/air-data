@@ -6,6 +6,7 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 
 import org.h2.tools.RunScript;
+import org.junit.jupiter.api.BeforeAll;
 
 import com.github.mengxianun.core.DataTranslator;
 import com.google.common.base.Charsets;
@@ -16,12 +17,14 @@ public class TestSupport {
 	
 	public static DataTranslator translator = new DataTranslator();
 	public static final String DB_DRIVER_CLASS_NAME = "org.h2.Driver";
-	public static final String DB_URL = "jdbc:h2:~/air-jdbc";
+	public static final String DB_URL = "jdbc:h2:~/air_jdbc";
 	public static final String DB_USERNAME = "test";
 	public static final String DB_PASSWORD = "123456";
 	public static final String DATASOURCE_NAME = "ds";
 	public static final String DATABASE_INIT_SCRIPT = "test.sql";
 	
+	public static boolean databaseCreated = false;
+
 	public static void createDataContext() {
 		JsonObject dataSourceJsonObject = new JsonObject();
 		dataSourceJsonObject.addProperty("url", DB_URL);
@@ -39,6 +42,21 @@ public class TestSupport {
 			e.printStackTrace();
 		}
 
+	}
+
+	@BeforeAll
+	static void initAll() {
+		if (databaseCreated) {
+			return;
+		}
+		try {
+			Class.forName(DB_DRIVER_CLASS_NAME);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		initDatabase();
+		createDataContext();
+		databaseCreated = true;
 	}
 
 	public String readJson(String jsonFile) {

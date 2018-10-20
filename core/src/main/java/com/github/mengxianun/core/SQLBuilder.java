@@ -3,6 +3,7 @@ package com.github.mengxianun.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.item.ColumnItem;
@@ -158,12 +159,29 @@ public class SQLBuilder {
 			}
 			Table table = tableItem.getTable();
 			if (table != null) {
-				Dialect dialect = dataContext.getDialect();
-				if (dialect.assignDatabase()) {
-					Schema schema = table.getSchema();
-					tablesBuilder.append(schema.getName()).append(".");
+				// join 和 limit 同时存在时, 并且存在一对多或多对多的情况下, 分页会出问题.
+				// 这里将主表作为基础表(子查询), 特殊处理.
+				if (!action.getJoinItems().isEmpty() || action.getLimitItem() != null) {
+					List<FilterItem> filterItems = action.getFilterItems();
+					// 主表的条件
+					List<FilterItem> mainTableFilterItems = filterItems.stream()
+							.filter(e -> e.getColumn().getTable().getName().equals(table.getName()))
+							.collect(Collectors.toList());
+					String mainTableWhereString = toWhere(mainTableFilterItems);
+					tablesBuilder.append("(").append(PREFIX_SELECT).append("*").append(PREFIX_FROM)
+							.append(table.getName()).append(mainTableWhereString).append(toLimit())
+							.append(")");
+					// 删除已经在主表中用到的元素
+					action.getFilterItems().removeAll(mainTableFilterItems);
+					action.setLimitItem(null);
+				} else {
+					Dialect dialect = dataContext.getDialect();
+					if (dialect.assignDatabase()) {
+						Schema schema = table.getSchema();
+						tablesBuilder.append(schema.getName()).append(".");
+					}
+					tablesBuilder.append(quote(table.getName()));
 				}
-				tablesBuilder.append(quote(table.getName()));
 			} else {
 				tablesBuilder.append(tableItem.getExpression());
 			}
@@ -235,7 +253,10 @@ public class SQLBuilder {
 	}
 
 	public String toWhere() {
-		List<FilterItem> filterItems = action.getFilterItems();
+		return toWhere(action.getFilterItems());
+	}
+
+	public String toWhere(List<FilterItem> filterItems) {
 		if (filterItems.isEmpty()) {
 			return "";
 		}
@@ -411,7 +432,12 @@ public class SQLBuilder {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_UPDATE);
 		Table table = tableItems.get(0).getTable();
-		tableBuilder.append(table.getSchema().getName()).append(".").append(quote(table.getName()));
+		Dialect dialect = dataContext.getDialect();
+		if (dialect.assignDatabase()) {
+			Schema schema = table.getSchema();
+			tableBuilder.append(schema.getName()).append(".");
+		}
+		tableBuilder.append(quote(table.getName()));
 		return tableBuilder.toString();
 	}
 

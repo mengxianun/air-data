@@ -1,4 +1,4 @@
 {
-  "select":"user",
-  "join":["user_role", "role"]
+  "select":"join_table_1",
+  "join":["join_table_2", "join_table_3"]
 }
