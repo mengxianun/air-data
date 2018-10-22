@@ -971,6 +971,7 @@ public class JsonParser {
 	 * @param columnString
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	@Deprecated
 	private Column findJoinColumn(String columnString) {
 		List<JoinItem> joinItems = action.getJoinItems();
