@@ -23,6 +23,7 @@ public class ElasticsearchRowProcessor extends BasicRowProcessor {
 			if (null == columnName || 0 == columnName.length()) {
 				columnName = rsmd.getColumnName(i);
 			}
+			// elasticsearch-sql 插件获取列元素从0开始
 			result.put(columnName, rs.getObject(i - 1));
 		}
 

@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.github.mengxianun.core.attributes.ConfigAttributes;
 import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.item.TableItem;
+import com.github.mengxianun.core.resutset.DefaultDataResultSet;
+import com.github.mengxianun.core.resutset.FailDataResultSet;
 import com.github.mengxianun.core.schema.Table;
 import com.google.gson.JsonObject;
 
@@ -53,9 +55,9 @@ public class DataTranslator extends AbstractTranslator {
 			}
 		} catch (DataException e) {
 			logger.error(e.getMessage(), e.getCause());
-			return new DefaultDataResultSet(e.getCode(), e.getMessage());
+			return new FailDataResultSet(e.getCode(), e.getMessage());
 		} catch (Exception e) {
-			return new DefaultDataResultSet(ResultStatus.TRANSLATION_FAILED);
+			return new FailDataResultSet(ResultStatus.TRANSLATION_FAILED);
 		}
 
 		long end = System.currentTimeMillis();

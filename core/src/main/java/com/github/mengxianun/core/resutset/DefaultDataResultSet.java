@@ -1,4 +1,7 @@
-package com.github.mengxianun.core;
+package com.github.mengxianun.core.resutset;
+
+import com.github.mengxianun.core.AbstractDataResultSet;
+import com.github.mengxianun.core.ResultStatus;
 
 public class DefaultDataResultSet extends AbstractDataResultSet {
 

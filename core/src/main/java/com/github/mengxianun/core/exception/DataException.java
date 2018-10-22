@@ -7,7 +7,6 @@ public class DataException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	protected int code;
-	protected String reason;
 
 	public DataException() {
 		super();

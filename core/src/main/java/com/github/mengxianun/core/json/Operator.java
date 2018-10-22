@@ -8,31 +8,29 @@ package com.github.mengxianun.core.json;
  */
 public enum Operator {
 
-	/*
-	 * 运算符
-	 */
+	// 等于
 	EQUAL("=", "="),
-	//
+	// 不等于
 	NOT_EQUAL("!=", "<>"),
-	//
+	// 大于
 	GT(">", ">"),
-	//
+	// 大于等于
 	GTE(">=", ">="),
-	//
+	// 小于
 	LT("<", "<"),
-	//
+	// 小于等于
 	LTE("<=", "<="),
-	//
+	// in
 	IN(",", "in"),
-	//
+	// not in
 	NOT_IN(",", "not in"),
-	//
+	// between
 	BETWEEN("~", "between"),
-	//
+	// like
 	LIKE("%=", "like"),
-	//
+	// not like
 	NOT_LIKE("!%=", "not like"),
-	//
+	// not
 	NOT("!", "not");
 
 	/*

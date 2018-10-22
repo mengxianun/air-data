@@ -125,20 +125,7 @@ public class SQLBuilder {
 				if (comma) {
 					columnsBuilder.append(", ");
 				}
-				Column column = columnItem.getColumn();
-				if (column != null) {
-					TableItem tableItem = columnItem.getTableItem();
-					if (tableItem != null) { // 列所属表指定了别名
-						String tableAlias = tableItem.getAlias();
-						columnsBuilder.append(tableAlias);
-					} else { // 列所属表没有指定别名, 使用真实表名作为前缀
-						String tableName = column.getTable().getName();
-						columnsBuilder.append(quote(tableName));
-					}
-					columnsBuilder.append(".").append(quote(column.getName()));
-				} else {
-					columnsBuilder.append(columnItem.getExpression());
-				}
+				columnsBuilder.append(splicaColumn(columnItem));
 				String alias = columnItem.getAlias();
 				if (!Strings.isNullOrEmpty(alias)) {
 					columnsBuilder.append(ALIAS_KEY).append(alias);
@@ -161,11 +148,11 @@ public class SQLBuilder {
 			if (table != null) {
 				// join 和 limit 同时存在时, 并且存在一对多或多对多的情况下, 分页会出问题.
 				// 这里将主表作为基础表(子查询), 特殊处理.
-				if (!action.getJoinItems().isEmpty() || action.getLimitItem() != null) {
+				if (!action.getJoinItems().isEmpty() && action.getLimitItem() != null) {
 					List<FilterItem> filterItems = action.getFilterItems();
 					// 主表的条件
 					List<FilterItem> mainTableFilterItems = filterItems.stream()
-							.filter(e -> e.getColumn().getTable().getName().equals(table.getName()))
+							.filter(e -> e.getColumnItem().getTableItem().getTable().getName().equals(table.getName()))
 							.collect(Collectors.toList());
 					String mainTableWhereString = toWhere(mainTableFilterItems);
 					tablesBuilder.append("(").append(PREFIX_SELECT).append("*").append(PREFIX_FROM)
@@ -283,14 +270,8 @@ public class SQLBuilder {
 			filterBuilder.append("(").append(subFilterSql).append(")");
 			return filterBuilder.toString();
 		}
-		Column column = filterItem.getColumn();
-		if (column == null) {
-			filterBuilder.append(filterItem.getExpression());
-		} else {
-			String tableName = column.getTable().getName();
-			String columnName = column.getName();
-			filterBuilder.append(quote(tableName)).append(".").append(quote(columnName));
-		}
+		ColumnItem columnItem = filterItem.getColumnItem();
+		filterBuilder.append(splicaColumn(columnItem));
 		filterBuilder.append(" ");
 		Object value = filterItem.getValue();
 		Operator operator = filterItem.getOperator();
@@ -336,13 +317,8 @@ public class SQLBuilder {
 			if (comma) {
 				groupsBuilder.append(", ");
 			}
-			Column column = groupItem.getColumn();
-			if (column != null) {
-				Table table = column.getTable();
-				groupsBuilder.append(quote(table.getName())).append(".").append(quote(column.getName()));
-			} else {
-				groupsBuilder.append(groupItem.getExpression());
-			}
+			ColumnItem columnItem = groupItem.getColumnItem();
+			groupsBuilder.append(splicaColumn(columnItem));
 			comma = true;
 		}
 		return groupsBuilder.toString();
@@ -359,13 +335,9 @@ public class SQLBuilder {
 			if (comma) {
 				ordersBuilder.append(", ");
 			}
-			Column column = orderItem.getColumn();
-			if (column != null) {
-				Table table = column.getTable();
-				ordersBuilder.append(quote(table.getName())).append(".").append(quote(column.getName()));
-			} else {
-				ordersBuilder.append(orderItem.getExpression());
-			}
+			ColumnItem columnItem = orderItem.getColumnItem();
+			ordersBuilder.append(splicaColumn(columnItem));
+
 			switch (orderItem.getOrder()) {
 			case DESC:
 				ordersBuilder.append(ORDER_DESC);
@@ -426,8 +398,7 @@ public class SQLBuilder {
 	public String toUpdateTable() {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_UPDATE);
-		Table table = tableItems.get(0).getTable();
-		tableBuilder.append(spliceTable(table));
+		tableBuilder.append(spliceTable(tableItems.get(0)));
 		return tableBuilder.toString();
 	}
 
@@ -451,8 +422,7 @@ public class SQLBuilder {
 	public String toDeleteTable() {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_DELETE_FROM);
-		Table table = tableItems.get(0).getTable();
-		tableBuilder.append(spliceTable(table));
+		tableBuilder.append(spliceTable(tableItems.get(0)));
 		return tableBuilder.toString();
 	}
 
@@ -468,6 +438,17 @@ public class SQLBuilder {
 		}
 	}
 
+	public String spliceTable(TableItem tableItem) {
+		StringBuilder tableBuilder = new StringBuilder();
+		Table table = tableItem.getTable();
+		tableBuilder.append(spliceTable(table));
+		String alias = tableItem.getAlias();
+		if (!Strings.isNullOrEmpty(alias)) {
+			tableBuilder.append(ALIAS_KEY).append(alias);
+		}
+		return tableBuilder.toString();
+	}
+
 	public String spliceTable(Table table) {
 		StringBuilder tableBuilder = new StringBuilder();
 		Dialect dialect = dataContext.getDialect();
@@ -477,6 +458,30 @@ public class SQLBuilder {
 		}
 		tableBuilder.append(quote(table.getName()));
 		return tableBuilder.toString();
+	}
+
+	/**
+	 * 拼接列, 在所属表指定了别名的情况下, 以表别名作为前缀, 否则以表名作为前缀
+	 * 
+	 * @param columnItem
+	 * @return
+	 */
+	public String splicaColumn(ColumnItem columnItem) {
+		StringBuilder columnBuilder = new StringBuilder();
+		Column column = columnItem.getColumn();
+		if (column == null) {
+			columnBuilder.append(columnItem.getExpression());
+		} else {
+			TableItem tableItem = columnItem.getTableItem();
+			String tableAlias = tableItem.getAlias();
+			if (!Strings.isNullOrEmpty(tableAlias)) {
+				columnBuilder.append(tableAlias);
+			} else {
+				columnBuilder.append(tableItem.getTable().getName());
+			}
+			columnBuilder.append(".").append(quote(column.getName()));
+		}
+		return columnBuilder.toString();
 	}
 
 	/**
@@ -519,6 +524,5 @@ public class SQLBuilder {
 	public String getCountSql() {
 		return countSql;
 	}
-
 
 }
