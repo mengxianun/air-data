@@ -1,6 +1,6 @@
------------------
+----------------------------------
 -- SELECT TEST TABLES
------------------
+----------------------------------
 DROP TABLE IF EXISTS SELECT_TABLE;
 CREATE TABLE SELECT_TABLE(ID INT PRIMARY KEY, NAME VARCHAR(255) DEFAULT '');
 
@@ -10,9 +10,16 @@ INSERT INTO SELECT_TABLE VALUES(2, 'abc');
 INSERT INTO SELECT_TABLE VALUES(3, 'cde');
 
 
------------------
+----------------------------------
+-- INSERT TEST TABLES
+----------------------------------
+DROP TABLE IF EXISTS INSERT_TABLE;
+CREATE TABLE INSERT_TABLE(ID INT AUTO_INCREMENT PRIMARY KEY, NAME VARCHAR(255) DEFAULT '');
+
+
+----------------------------------
 -- UPDATE TEST TABLES
------------------
+----------------------------------
 DROP TABLE IF EXISTS UPDATE_TABLE;
 CREATE TABLE UPDATE_TABLE(ID INT PRIMARY KEY, NAME VARCHAR(255) DEFAULT '');
 
@@ -20,9 +27,19 @@ CREATE TABLE UPDATE_TABLE(ID INT PRIMARY KEY, NAME VARCHAR(255) DEFAULT '');
 INSERT INTO UPDATE_TABLE VALUES(1, 'ABC');
 
 
------------------
+----------------------------------
+-- DELETE TEST TABLES
+----------------------------------
+DROP TABLE IF EXISTS DELETE_TABLE;
+CREATE TABLE DELETE_TABLE(ID INT PRIMARY KEY, NAME VARCHAR(255) DEFAULT '');
+
+-- SELECT_TABLE
+INSERT INTO DELETE_TABLE VALUES(1, 'ABC');
+
+
+----------------------------------
 -- JOIN TEST TABLES
------------------
+----------------------------------
 DROP TABLE IF EXISTS JOIN_TABLE_1;
 CREATE TABLE JOIN_TABLE_1(ID INT PRIMARY KEY, NAME VARCHAR(255) DEFAULT '', TABLE_2_ID INT);
 

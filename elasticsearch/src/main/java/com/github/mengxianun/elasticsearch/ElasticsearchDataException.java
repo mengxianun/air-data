@@ -29,7 +29,15 @@ public class ElasticsearchDataException extends DataException {
 	}
 
 	public ElasticsearchDataException(ResultStatus resultStatus) {
-		this.resultStatus = resultStatus;
+		super(resultStatus);
+	}
+
+	public ElasticsearchDataException(String message, ResultStatus resultStatus) {
+		super(message, resultStatus);
+	}
+
+	public ElasticsearchDataException(String message, Throwable cause, ResultStatus resultStatus) {
+		super(message, cause, resultStatus);
 	}
 
 }

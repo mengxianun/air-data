@@ -83,7 +83,7 @@ public class SQLBuilder {
 	public void toSelect() {
 		StringBuilder sqlBuilder = new StringBuilder();
 		sqlBuilder.append(toColumns());
-		sqlBuilder.append(toTables());
+		sqlBuilder.append(toSelectTables());
 		sqlBuilder.append(toJoins());
 		sqlBuilder.append(toWhere());
 		sqlBuilder.append(toGroups());
@@ -149,7 +149,7 @@ public class SQLBuilder {
 		return columnsBuilder.toString();
 	}
 
-	public String toTables() {
+	public String toSelectTables() {
 		StringBuilder tablesBuilder = new StringBuilder(PREFIX_FROM);
 		List<TableItem> tableItems = action.getTableItems();
 		boolean comma = false;
@@ -175,12 +175,7 @@ public class SQLBuilder {
 					action.getFilterItems().removeAll(mainTableFilterItems);
 					action.setLimitItem(null);
 				} else {
-					Dialect dialect = dataContext.getDialect();
-					if (dialect.assignDatabase()) {
-						Schema schema = table.getSchema();
-						tablesBuilder.append(schema.getName()).append(".");
-					}
-					tablesBuilder.append(quote(table.getName()));
+					tablesBuilder.append(spliceTable(table));
 				}
 			} else {
 				tablesBuilder.append(tableItem.getExpression());
@@ -399,7 +394,7 @@ public class SQLBuilder {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_INSERT_INTO);
 		Table table = tableItems.get(0).getTable();
-		tableBuilder.append(table.getSchema().getName()).append(".").append(quote(table.getName()));
+		tableBuilder.append(spliceTable(table));
 		return tableBuilder.toString();
 
 	}
@@ -432,12 +427,7 @@ public class SQLBuilder {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_UPDATE);
 		Table table = tableItems.get(0).getTable();
-		Dialect dialect = dataContext.getDialect();
-		if (dialect.assignDatabase()) {
-			Schema schema = table.getSchema();
-			tableBuilder.append(schema.getName()).append(".");
-		}
-		tableBuilder.append(quote(table.getName()));
+		tableBuilder.append(spliceTable(table));
 		return tableBuilder.toString();
 	}
 
@@ -462,7 +452,7 @@ public class SQLBuilder {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_DELETE_FROM);
 		Table table = tableItems.get(0).getTable();
-		tableBuilder.append(table.getSchema().getName()).append(".").append(quote(table.getName()));
+		tableBuilder.append(spliceTable(table));
 		return tableBuilder.toString();
 	}
 
@@ -476,6 +466,17 @@ public class SQLBuilder {
 		default:
 			return sql;
 		}
+	}
+
+	public String spliceTable(Table table) {
+		StringBuilder tableBuilder = new StringBuilder();
+		Dialect dialect = dataContext.getDialect();
+		if (dialect.assignDatabase()) {
+			Schema schema = table.getSchema();
+			tableBuilder.append(schema.getName()).append(".");
+		}
+		tableBuilder.append(quote(table.getName()));
+		return tableBuilder.toString();
 	}
 
 	/**

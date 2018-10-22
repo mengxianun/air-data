@@ -4,16 +4,20 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 import org.h2.tools.RunScript;
 import org.junit.jupiter.api.BeforeAll;
 
+import com.github.mengxianun.core.DataResultSet;
 import com.github.mengxianun.core.DataTranslator;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.gson.JsonObject;
 
 public class TestSupport {
+	
+	static final Logger LOG = Logger.getLogger(TestSupport.class.getName());
 	
 	public static DataTranslator translator = new DataTranslator();
 	public static final String DB_DRIVER_CLASS_NAME = "org.h2.Driver";
@@ -41,7 +45,6 @@ public class TestSupport {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	@BeforeAll
@@ -59,7 +62,7 @@ public class TestSupport {
 		databaseCreated = true;
 	}
 
-	public String readJson(String jsonFile) {
+	String readJson(String jsonFile) {
 		URL url = Resources.getResource(jsonFile);
 		try {
 			return Resources.toString(url, Charsets.UTF_8);
@@ -67,6 +70,15 @@ public class TestSupport {
 			e.printStackTrace();
 			return "";
 		}
+	}
+
+	DataResultSet run(String jsonFile) {
+		String json = readJson(jsonFile);
+		DataResultSet dataResultSet = translator.translate(json);
+		LOG.info("Json: " + json);
+		LOG.info("Result code: " + dataResultSet.getCode());
+		LOG.info("Result message: " + dataResultSet.getMessage());
+		return dataResultSet;
 	}
 
 }

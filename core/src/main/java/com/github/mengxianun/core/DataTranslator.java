@@ -49,14 +49,15 @@ public class DataTranslator extends AbstractTranslator {
 			} else {
 				Action action = jsonParser.getAction();
 				result = jsonParser.getDataContext().action(action);
-				//
 				result = new DataRenderer().render(result, action);
 			}
 		} catch (DataException e) {
-			return new DefaultDataResultSet(e.getResultStatus());
+			logger.error(e.getMessage(), e.getCause());
+			return new DefaultDataResultSet(e.getCode(), e.getMessage());
 		} catch (Exception e) {
-			return new DefaultDataResultSet(ResultStatus.SERVER_ERROR.code(), e.getMessage());
+			return new DefaultDataResultSet(ResultStatus.TRANSLATION_FAILED);
 		}
+
 		long end = System.currentTimeMillis();
 		long took = end - start;
 		return new DefaultDataResultSet(took, result);

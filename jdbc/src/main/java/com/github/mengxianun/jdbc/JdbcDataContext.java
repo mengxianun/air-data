@@ -27,7 +27,6 @@ import com.github.mengxianun.core.MetaData;
 import com.github.mengxianun.core.ResultStatus;
 import com.github.mengxianun.core.SQLBuilder;
 import com.github.mengxianun.core.attributes.ResultAttributes;
-import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.json.JsonAttributes;
 import com.github.mengxianun.core.schema.DefaultColumn;
 import com.github.mengxianun.core.schema.DefaultSchema;
@@ -345,8 +344,8 @@ public class JdbcDataContext extends AbstractDataContext {
 				data = map;
 			}
 		} catch (SQLException e) {
-			logger.error("json execution failed", e);
-			throw new DataException(ResultStatus.BAD_REQUEST);
+			logger.error(ResultStatus.DATASOURCE_SQL_FAILED.message(), e);
+			throw new JdbcDataException(ResultStatus.DATASOURCE_SQL_FAILED.fill(sql));
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("SQL: {}", sql);
@@ -379,11 +378,8 @@ public class JdbcDataContext extends AbstractDataContext {
 				map.put(ResultAttributes.COUNT.toString().toLowerCase(), count);
 			}
 		} catch (SQLException e) {
-			logger.error("Script execution failed", e);
-			throw new DataException(ResultStatus.BAD_REQUEST);
-		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("NATIVE: {}", script);
+			logger.error(ResultStatus.NATIVE_FAILED.message(), e);
+			throw new JdbcDataException(ResultStatus.NATIVE_FAILED);
 		}
 		return data;
 	}

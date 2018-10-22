@@ -10,14 +10,14 @@ import com.github.mengxianun.core.DataResultSet;
 import com.github.mengxianun.core.attributes.ResultAttributes;
 import com.google.gson.JsonObject;
 
-@DisplayName("Jdbc update test")
-public class UpdateTest extends TestSupport {
+@DisplayName("Jdbc delete test")
+public class DeleteTest extends TestSupport {
 
-	private static final String JSON_PARENT_PATH = "json/update/";
+	private static final String JSON_PARENT_PATH = "json/delete/";
 
 	@Test
-	void testUpdateTable() {
-		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "update.json");
+	void testDeleteTable() {
+		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "delete.json");
 		JsonObject result = (JsonObject) dataResultSet.getData();
 		assertTrue(result.has(ResultAttributes.COUNT.toString().toLowerCase()));
 		int count = result.getAsJsonPrimitive(ResultAttributes.COUNT.toString().toLowerCase()).getAsInt();

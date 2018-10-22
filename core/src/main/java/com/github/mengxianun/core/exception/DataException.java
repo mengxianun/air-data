@@ -6,7 +6,8 @@ public class DataException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	protected ResultStatus resultStatus;
+	protected int code;
+	protected String reason;
 
 	public DataException() {
 		super();
@@ -29,15 +30,22 @@ public class DataException extends RuntimeException {
 	}
 
 	public DataException(ResultStatus resultStatus) {
-		this.resultStatus = resultStatus;
+		super(resultStatus.message());
+		this.code = resultStatus.code();
 	}
 
-	public ResultStatus getResultStatus() {
-		return resultStatus;
+	public DataException(String message, ResultStatus resultStatus) {
+		super(message);
+		this.code = resultStatus.code();
 	}
 
-	public void setResultStatus(ResultStatus resultStatus) {
-		this.resultStatus = resultStatus;
+	public DataException(String message, Throwable cause, ResultStatus resultStatus) {
+		super(message, cause);
+		this.code = resultStatus.code();
+	}
+
+	public int getCode() {
+		return code;
 	}
 
 }

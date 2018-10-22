@@ -28,7 +28,15 @@ public class JdbcDataException extends DataException {
 	}
 
 	public JdbcDataException(ResultStatus resultStatus) {
-		this.resultStatus = resultStatus;
+		super(resultStatus);
+	}
+
+	public JdbcDataException(String message, ResultStatus resultStatus) {
+		super(message, resultStatus);
+	}
+
+	public JdbcDataException(String message, Throwable cause, ResultStatus resultStatus) {
+		super(message, cause, resultStatus);
 	}
 
 }

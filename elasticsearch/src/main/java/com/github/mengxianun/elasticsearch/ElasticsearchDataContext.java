@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.mengxianun.core.DefaultDialect;
 import com.github.mengxianun.core.ResultStatus;
-import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.schema.DefaultColumn;
 import com.github.mengxianun.core.schema.DefaultSchema;
 import com.github.mengxianun.core.schema.DefaultTable;
@@ -92,8 +91,8 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 			Response response = client.performRequest("GET", "/" + table + "/_search", new HashMap<>(), nStringEntity);
 			responseBody = EntityUtils.toString(response.getEntity());
 		} catch (ParseException | IOException e) {
-			logger.error("Native statement execution failed", e);
-			throw new DataException(ResultStatus.BAD_REQUEST);
+			logger.error(ResultStatus.NATIVE_FAILED.message(), e);
+			throw new ElasticsearchDataException(ResultStatus.NATIVE_FAILED);
 		}
 		JsonObject responseObject = new JsonParser().parse(responseBody).getAsJsonObject();
 		return responseObject;
