@@ -660,6 +660,48 @@ public class JsonParser {
 		ColumnItem columnItem = createColumnItem(columnString);
 		return new FilterItem(columnItem, value, Connector.AND, operator);
 	}
+	
+	public void addFilter(String filterString) {
+		Cond cond = parseCond(filterString);
+		Operator operator = cond.getOperator();
+		String columnString = cond.getColumn();
+		Object value = cond.getValue();
+
+		ColumnItem columnItem = createColumnItem(columnString);
+		if (columnItem == null) { // 不属于主表, 也不属于 join 表
+			Column column = findColumn(columnString);
+			List<TableItem> tableItems = action.getTableItems();
+			for (TableItem tableItem : tableItems) {
+				Table table = tableItem.getTable();
+				List<Relationship> relationships = table.getRelationships(column.getTable());
+				if (relationships.isEmpty()) {
+					throw new JsonDataException(ResultStatus.DATASOURCE_RELATIONSHIP_NOT_FOUND.fill(table.getName()));
+				}
+				for (int i = 0; i < relationships.size(); i++) {
+					Relationship relationship = relationships.get(i);
+					Table primaryTable = relationship.getPrimaryTable();
+					Table foreignTable = relationship.getForeignTable();
+
+					TableItem primaryTableItem = getTableItem(primaryTable);
+					TableItem foreignTableItem = getTableItem(foreignTable);
+					if (foreignTableItem == null) {
+						String foreignTableAlias = getRandomString(6) + "_" + foreignTable.getName();
+						foreignTableItem = new TableItem(foreignTable, foreignTableAlias);
+					} else {
+						continue;
+					}
+
+					ColumnItem primaryColumnItem = new ColumnItem(relationship.getPrimaryColumn(), primaryTableItem);
+					ColumnItem foreignColumnItem = new ColumnItem(relationship.getForeignColumn(), foreignTableItem);
+					action.addJoinItem(new JoinItem(primaryColumnItem, foreignColumnItem, JoinType.LEFT));
+				}
+
+			}
+			columnItem = createColumnItem(columnString);
+		}
+		FilterItem filterItem = new FilterItem(columnItem, value, Connector.AND, operator);
+		action.addFilterItem(filterItem);
+	}
 
 	/**
 	 * 解析条件运算符
@@ -925,19 +967,19 @@ public class JsonParser {
 		if (column == null) { // 不是列名的情况, 如函数
 			return new ColumnItem(columnString, alias);
 		} else {
-			TableItem tableItem = getMainTableItem(column);
+			TableItem tableItem = getMainTableItem(column.getTable());
 			if (tableItem != null) {
 				return new ColumnItem(column, alias, tableItem);
 			} else {
-				tableItem = getJoinTableItem(column);
+				tableItem = getJoinTableItem(column.getTable());
 				if (tableItem != null) {
 					JoinColumnItem joinColumnItem = new JoinColumnItem(column, alias, tableItem);
 					parseJoinColumnAssociation(joinColumnItem);
 					return joinColumnItem;
 				}
-				throw new JsonDataException(ResultStatus.DATASOURCE_COLUMN_NOT_EXIST);
 			}
 		}
+		return null;
 	}
 
 	/**
@@ -1023,17 +1065,25 @@ public class JsonParser {
 		return null;
 	}
 
+	private TableItem getTableItem(Table table) {
+		TableItem tableItem = getMainTableItem(table);
+		if (tableItem == null) {
+			tableItem = getJoinTableItem(table);
+		}
+		return tableItem;
+	}
+
 	/**
 	 * 获取主表的 TableItem
 	 * 
-	 * @param column
+	 * @param table
 	 * @return
 	 */
-	private TableItem getMainTableItem(Column column) {
+	private TableItem getMainTableItem(Table table) {
 		List<TableItem> tableItems = action.getTableItems();
 		for (TableItem tableItem : tableItems) {
-			List<Column> columns = tableItem.getTable().getColumns();
-			if (columns.contains(column)) {
+			Table mainTable = tableItem.getTable();
+			if (mainTable == table) {
 				return tableItem;
 			}
 		}
@@ -1043,15 +1093,15 @@ public class JsonParser {
 	/**
 	 * 获取 join 表的 TableItem
 	 * 
-	 * @param column
+	 * @param table
 	 * @return
 	 */
-	private TableItem getJoinTableItem(Column column) {
+	private TableItem getJoinTableItem(Table table) {
 		List<JoinItem> joinItems = action.getJoinItems();
 		for (JoinItem joinItem : joinItems) {
 			TableItem tableItem = joinItem.getRightColumn().getTableItem();
-			List<Column> columns = tableItem.getTable().getColumns();
-			if (columns.contains(column)) {
+			Table joinTable = tableItem.getTable();
+			if (joinTable == table) {
 				return tableItem;
 			}
 		}

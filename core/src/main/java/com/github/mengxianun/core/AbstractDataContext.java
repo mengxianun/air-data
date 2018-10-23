@@ -3,7 +3,6 @@ package com.github.mengxianun.core;
 import java.util.List;
 
 import com.github.mengxianun.core.schema.Column;
-import com.github.mengxianun.core.schema.Relationship;
 import com.github.mengxianun.core.schema.Schema;
 import com.github.mengxianun.core.schema.Table;
 
@@ -53,11 +52,6 @@ public abstract class AbstractDataContext implements DataContext {
 	@Override
 	public Column getColumn(String schemaName, String tableName, String columnName) {
 		return metaData.getColumn(schemaName, tableName, columnName);
-	}
-
-	@Override
-	public Relationship getRelationship(Table primaryTable, Table foreignTable) {
-		return primaryTable.getRelationship(foreignTable);
 	}
 
 	@Override

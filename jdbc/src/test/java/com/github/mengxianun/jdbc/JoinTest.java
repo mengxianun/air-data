@@ -15,14 +15,14 @@ public class JoinTest extends TestSupport {
 	private static final String JSON_PARENT_PATH = "json/join/";
 
 	@Test
-	void testSelectJoin() {
+	void testJoin() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "join.json");
 		JsonArray result = (JsonArray) dataResultSet.getData();
 		assertTrue(result.size() > 0);
 	}
 
 	@Test
-	void testSelectJoinLimit() {
+	void testJoinLimit() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "join_limit.json");
 		JsonArray result = (JsonArray) dataResultSet.getData();
 		assertEquals(result.size(), 2);

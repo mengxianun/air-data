@@ -21,8 +21,6 @@ public interface Table extends Name {
 
 	public String getRemarks();
 
-	public List<Relationship> getRelationships();
-
 	/**
 	 * 获取配置的关联关系
 	 * 
@@ -30,6 +28,21 @@ public interface Table extends Name {
 	 * @return
 	 */
 	public Relationship getRelationship(Table foreignTable);
+
+	/**
+	 * 获取配置的多层关联关系. 如 A join B join C, 获取 A 对 C 的关联关系, 将会得到 [ A-B, B-C]
+	 * 
+	 * @param foreignTable
+	 * @return
+	 */
+	public List<Relationship> getRelationships(Table foreignTable);
+
+	/**
+	 * 获取直接关联的关联关系
+	 * 
+	 * @return
+	 */
+	public List<Relationship> getRelationships();
 
 	/**
 	 * 获取关联关系

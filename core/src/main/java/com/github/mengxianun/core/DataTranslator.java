@@ -2,6 +2,7 @@ package com.github.mengxianun.core;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +33,23 @@ public class DataTranslator extends AbstractTranslator {
 	
 	@Override
 	public DataResultSet translate(String json) {
+		return translate(json, new String[] {});
+	}
+
+	@Override
+	public DataResultSet translate(String json, String... filterExpressions) {
 		long start = System.currentTimeMillis();
 		Object result = null;
 		JsonObject jsonData = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
 		JsonParser jsonParser = new JsonParser(jsonData, this);
 		jsonParser.parse();
+		// -------------------------
+		// 添加额外过滤条件, 待优化
+		// -------------------------
+		if (filterExpressions != null && filterExpressions.length > 0) {
+			Arrays.asList(filterExpressions).forEach(jsonParser::addFilter);
+			// jsonParser.addFilter(filterExpressions);
+		}
 		try {
 			if (jsonParser.isStruct()) {
 				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
@@ -76,7 +89,5 @@ public class DataTranslator extends AbstractTranslator {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-
 
 }

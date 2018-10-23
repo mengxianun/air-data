@@ -20,6 +20,15 @@ public interface Translator {
 	public DataResultSet translate(String json);
 
 	/**
+	 * 将 JSON 翻译为对象返回, 同时添加过滤条件
+	 * 
+	 * @param json
+	 * @param filterExpressions
+	 * @return
+	 */
+	public DataResultSet translate(String json, String... filterExpressions);
+
+	/**
 	 * 将 JSON 翻译为字符串返回
 	 * 
 	 * @param json

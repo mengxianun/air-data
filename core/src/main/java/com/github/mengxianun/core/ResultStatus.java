@@ -29,6 +29,8 @@ public enum ResultStatus {
 	DATASOURCE_COLUMN_NOT_EXIST(10203, "Column [%s] do not exist"),
 	// SQL 执行失败
 	DATASOURCE_SQL_FAILED(10204, "SQL statement execution failed. SQL: %s"),
+	// 关联关系不存在
+	DATASOURCE_RELATIONSHIP_NOT_FOUND(10205, "The association relation of [%s] table is not found"),
 
 	/**
 	 * JSON 错误
