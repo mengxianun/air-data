@@ -18,7 +18,7 @@ public class InsertTest extends TestSupport {
 	@Test
 	void testInsertTable() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "insert.json");
-		JsonObject result = (JsonObject) dataResultSet.getData();
+		JsonObject result = (JsonObject) dataResultSet.getJsonData();
 		assertTrue(result.has(ResultAttributes.PRIMARY_KEY.toString().toLowerCase()));
 		int primaryKey = result.getAsJsonPrimitive(ResultAttributes.PRIMARY_KEY.toString().toLowerCase()).getAsInt();
 		assertEquals(primaryKey, 1);

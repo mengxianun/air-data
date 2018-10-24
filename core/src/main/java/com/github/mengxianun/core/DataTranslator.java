@@ -13,6 +13,8 @@ import com.github.mengxianun.core.item.TableItem;
 import com.github.mengxianun.core.resutset.DefaultDataResultSet;
 import com.github.mengxianun.core.resutset.FailDataResultSet;
 import com.github.mengxianun.core.schema.Table;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class DataTranslator extends AbstractTranslator {
@@ -39,7 +41,7 @@ public class DataTranslator extends AbstractTranslator {
 	@Override
 	public DataResultSet translate(String json, String... filterExpressions) {
 		long start = System.currentTimeMillis();
-		Object result = null;
+		JsonElement result = null;
 		JsonObject jsonData = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
 		JsonParser jsonParser = new JsonParser(jsonData, this);
 		jsonParser.parse();
@@ -48,19 +50,22 @@ public class DataTranslator extends AbstractTranslator {
 		// -------------------------
 		if (filterExpressions != null && filterExpressions.length > 0) {
 			Arrays.asList(filterExpressions).forEach(jsonParser::addFilter);
-			// jsonParser.addFilter(filterExpressions);
 		}
 		try {
 			if (jsonParser.isStruct()) {
 				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
 				Table table = tableItem.getTable();
-				result = table;
+				result = new Gson().toJsonTree(table);
 			} else if (jsonParser.isTransaction()) {
 				// to do
 			} else if (jsonParser.isNative()) {
 				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
 				Table table = tableItem.getTable();
 				result = jsonParser.getDataContext().executeNative(table, jsonParser.getNativeContent());
+			} else if (jsonParser.isTemplate()) {
+				// to do
+			} else if (jsonParser.isResultFile()) {
+				// to do
 			} else {
 				Action action = jsonParser.getAction();
 				result = jsonParser.getDataContext().action(action);

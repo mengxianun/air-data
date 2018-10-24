@@ -1,7 +1,6 @@
 package com.github.mengxianun.core;
 
 import java.util.List;
-import java.util.Map;
 
 import com.github.mengxianun.core.attributes.AssociationType;
 import com.github.mengxianun.core.item.ColumnItem;
@@ -13,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 /**
  * 结果数据渲染器
@@ -29,20 +29,21 @@ public class DataRenderer {
 	 * @param action
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public Object render(Object data, Action action) {
-		if (data instanceof List) {
-			return render((List<Map<String, Object>>) data, action);
-		} else if (data instanceof Map) {
-			return render((Map<String, Object>) data, action);
+	public JsonElement render(JsonElement data, Action action) {
+		if (data.isJsonArray()) {
+			return render(data.getAsJsonArray(), action);
+		} else if (data.isJsonObject()) {
+			return render(data.getAsJsonObject(), action);
+		} else {
+			return data;
 		}
-		return data;
 	}
 
-	public JsonElement render(List<Map<String, Object>> data, Action action) {
+	public JsonElement render(JsonArray data, Action action) {
 		// 主表唯一记录对象, key 为主表所有列的的值拼接的字符串, value 为主表唯一记录的对象
 		JsonObject uniqueRecords = new JsonObject();
-		for (Map<String, Object> record : data) {
+		for (JsonElement jsonElement : data) {
+			JsonObject record = jsonElement.getAsJsonObject();
 			// 主表的唯一记录对象
 			JsonObject uniqueRecord;
 			// 主表的唯一记录标识
@@ -67,7 +68,7 @@ public class DataRenderer {
 						Table joinTable = joinColumnItem.getTableItem().getTable();
 						if (existJoinTables.has(joinTable.getName())) {
 							JsonObject joinTableObject = existJoinTables.getAsJsonObject(joinTable.getName());
-							Object value = record.get(columnItem.getAlias());
+							JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
 							addColumnValue(joinTableObject, columnItem, value);
 							continue;
 						}
@@ -98,17 +99,17 @@ public class DataRenderer {
 						// 记录出现过的 join 表
 						existJoinTables.add(joinTable.getName(), currentTableObject);
 
-						Object value = record.get(columnItem.getAlias());
+						JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
 						addColumnValue(currentTableObject, columnItem, value);
 					} else {
-						Object value = record.get(columnItem.getAlias());
+						JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
 						addColumnValue(currentTableObject, columnItem, value);
 					}
 				}
 			} else {
 				List<ColumnItem> columnItems = action.getColumnItems();
 				for (ColumnItem columnItem : columnItems) {
-					Object value = record.get(columnItem.getAlias());
+					JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
 					addColumnValue(uniqueRecord, columnItem, value);
 				}
 			}
@@ -124,24 +125,32 @@ public class DataRenderer {
 	/**
 	 * 生成主表每条记录的唯一标识
 	 * 
-	 * @param data
+	 * @param record
 	 * @param action
 	 * @return
 	 */
-	public String createUniqueRecordKey(Map<String, Object> data, Action action) {
+	public String createUniqueRecordKey(JsonObject record, Action action) {
 		StringBuilder uniqueKey = new StringBuilder();
 		List<ColumnItem> columnItems = action.getColumnItems();
 		for (ColumnItem columnItem : columnItems) {
 			if (!(columnItem instanceof JoinColumnItem)) { // 主表列
 				// Column column = columnItem.getColumn();
-				Object value = data.get(columnItem.getAlias());
-				uniqueKey.append(value == null ? "" : value.toString());
+				String columnAlias = columnItem.getAlias();
+				Object value = null;
+				if (record.has(columnAlias)) {
+					value = record.get(columnAlias);
+				} else if (record.has(columnAlias.toUpperCase())) {
+					record.get(columnAlias.toUpperCase());
+				} else if (record.has(columnAlias.toLowerCase())) {
+					record.get(columnAlias.toLowerCase());
+				}
+				uniqueKey.append(value.toString());
 			}
 		}
 		return uniqueKey.toString();
 	}
 
-	public JsonElement render(Map<String, Object> data, Action action) {
+	public JsonElement render(JsonObject data, Action action) {
 		JsonObject jsonData = new JsonObject();
 		List<JoinItem> joinItems = action.getJoinItems();
 		// 构建关联信息
@@ -157,7 +166,7 @@ public class DataRenderer {
 					Table joinTable = joinColumnItem.getTableItem().getTable();
 					if (existJoinTables.has(joinTable.getName())) {
 						JsonObject joinTableObject = existJoinTables.getAsJsonObject(joinTable.getName());
-						Object value = data.get(columnItem.getAlias());
+						JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
 						addColumnValue(joinTableObject, columnItem, value);
 						continue;
 					}
@@ -174,10 +183,10 @@ public class DataRenderer {
 					// 记录出现过的 join 表
 					existJoinTables.add(joinTable.getName(), currentTableObject);
 
-					Object value = data.get(columnItem.getAlias());
+					JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
 					addColumnValue(currentTableObject, columnItem, value);
 				} else {
-					Object value = data.get(columnItem.getAlias());
+					JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
 					addColumnValue(jsonData, columnItem, value);
 				}
 			}
@@ -188,14 +197,14 @@ public class DataRenderer {
 			return new Gson().toJsonTree(data);
 		} else {
 			for (ColumnItem columnItem : columnItems) {
-				Object value = data.get(columnItem.getAlias());
+				JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
 				addColumnValue(jsonData, columnItem, value);
 			}
 		}
 		return jsonData;
 	}
 
-	public void addColumnValue(JsonObject record, ColumnItem columnItem, Object value) {
+	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonPrimitive value) {
 		Column column = columnItem.getColumn();
 		String columnAlias = columnItem.getAlias();
 		String columnKey = column == null ? columnAlias : treatColumn(column.getName());
@@ -212,7 +221,7 @@ public class DataRenderer {
 		return columnName.toLowerCase();
 	}
 
-	public String render(Column column, Object value) {
+	public String render(Column column, JsonPrimitive value) {
 		if (value == null) {
 			return null;
 		}
@@ -220,7 +229,7 @@ public class DataRenderer {
 		// JsonObject columnConfig = column.getConfig();
 		// to do
 		//////////////////
-		return value.toString();
+		return value.getAsString();
 	}
 
 	public JsonObject createJoinStructure(JsonObject currentTableObject, Table parentTable, Table joinTable) {

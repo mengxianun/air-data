@@ -1,7 +1,6 @@
 package com.github.mengxianun.core;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.google.gson.JsonElement;
 
 public interface DataResultSet {
 
@@ -9,18 +8,14 @@ public interface DataResultSet {
 
 	public Object getData();
 
+	public JsonElement getJsonData();
+
 	public int getCode();
 
 	public String getMessage();
 
-	// public List<Object[]> toObjectArrays();
+	public boolean isFile();
 
-	// public List<Map<String, Object>> toMapList();
-
-	public String toString();
-
-	// public InputStream toDataStream();
-
-	public InputStream getDataStream(ResultType resultType) throws IOException;
+	public boolean succeed();
 
 }

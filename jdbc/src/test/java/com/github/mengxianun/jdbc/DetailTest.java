@@ -16,7 +16,7 @@ public class DetailTest extends TestSupport {
 	@Test
 	void testDetailTable() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "detail.json");
-		Object data = dataResultSet.getData();
+		Object data = dataResultSet.getJsonData();
 		assertTrue(data instanceof JsonObject);
 	}
 

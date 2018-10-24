@@ -32,7 +32,7 @@ public class SQLTest extends TestSupport {
 		String json = readJson("json/select_table.json");
 		DataResultSet dataResultSet = translator.translate(json);
 		@SuppressWarnings("unchecked")
-		List<Map<String, Object>> data = (List<Map<String, Object>>) dataResultSet.getData();
+		List<Map<String, Object>> data = (List<Map<String, Object>>) dataResultSet.getJsonData();
 		assertTrue(data.size() > 0);
 	}
 

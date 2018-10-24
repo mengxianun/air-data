@@ -26,6 +26,7 @@ import com.github.mengxianun.core.schema.Schema;
 import com.github.mengxianun.core.schema.Table;
 import com.github.mengxianun.elasticsearch.processor.ElasticsearchRowProcessor;
 import com.github.mengxianun.jdbc.JdbcDataContext;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -84,7 +85,7 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 	}
 
 	@Override
-	public Object executeNative(Table table, String script) {
+	public JsonElement executeNative(Table table, String script) {
 		String responseBody = null;
 		try {
 			NStringEntity nStringEntity = new NStringEntity(script, ContentType.APPLICATION_JSON);

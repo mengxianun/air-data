@@ -125,19 +125,15 @@ public class JsonParser {
 		case SELECT:
 			parseSelect();
 			break;
-
 		case INSERT:
 			parseInsert();
 			break;
-
 		case UPDATE:
 			parseUpdate();
 			break;
-
 		case DELETE:
 			parseDelete();
 			break;
-
 		case NATIVE:
 			parseNative();
 			break;
@@ -145,6 +141,8 @@ public class JsonParser {
 		default:
 			break;
 		}
+
+		parseResult();
 
 		action.setOperation(operation);
 		action.setDataContext(dataContext);
@@ -198,9 +196,18 @@ public class JsonParser {
 		String tableString = tableElement.getAsString().trim();
 		String alias = null;
 		if (tableString.contains(JsonAttributes.COLUMN_ALIAS_KEY)) {
-			String[] tableAlias = tableString.split(JsonAttributes.COLUMN_ALIAS_KEY);
-			tableString = tableAlias[0];
-			alias = tableAlias[1];
+			String[] tablePart = tableString.split(JsonAttributes.COLUMN_ALIAS_KEY);
+			tableString = tablePart[0];
+			alias = tablePart[1];
+		} else if (tableString.contains(" ")) {
+			String[] tablePart = tableString.split("\\s+");
+			if (tablePart.length == 2) {
+				String regex = "^(?![0-9]*$)[a-zA-Z0-9_$]+$";
+				if (tablePart[0].matches(regex) && tablePart[1].matches(regex)) {
+					tableString = tablePart[0];
+					alias = tablePart[1];
+				}
+			}
 		}
 		String sourceName;
 		String tableName;
@@ -456,11 +463,27 @@ public class JsonParser {
 		String columnString = columnElement.getAsString().trim();
 		String alias = null;
 		if (columnString.contains(JsonAttributes.COLUMN_ALIAS_KEY)) {
-			String[] columnAlias = columnString.split(JsonAttributes.COLUMN_ALIAS_KEY);
-			columnString = columnAlias[0];
-			alias = columnAlias[1];
-		} else {
-			alias = getRandomString(6);
+			String[] columnPart = columnString.split(JsonAttributes.COLUMN_ALIAS_KEY);
+			columnString = columnPart[0];
+			alias = columnPart[1];
+		} else if (columnString.contains(" ")) {
+			String columnRegex = "^(?![0-9]*$)[a-zA-Z0-9_$()]+$";
+			String aliasRegex = "^(?![0-9]*$)[a-zA-Z0-9_$]+$";
+			String[] columnPart = columnString.split("\\s+");
+			if (columnPart.length == 2) {
+				if (columnPart[0].matches(columnRegex) && columnPart[1].matches(aliasRegex)) {
+					columnString = columnPart[0];
+					alias = columnPart[1];
+				}
+			} else {
+				int lastSpaceIndex = columnString.lastIndexOf(" ");
+				String frontPart = columnString.substring(0, lastSpaceIndex + 1).trim();
+				String backPart = columnString.substring(lastSpaceIndex + 1).trim();
+				if (backPart.matches(aliasRegex)) {
+					columnString = frontPart;
+					alias = backPart;
+				}
+			}
 		}
 		// 所有列. 例: "fields": "*"
 		if ("*".equals(columnString)) { // 所有列
@@ -863,7 +886,7 @@ public class JsonParser {
 	/**
 	 * 解析 Group 元素
 	 * 
-	 * @param groupElement
+	 * @param groupString
 	 * @return
 	 */
 	public GroupItem parseGroup(String groupString) {
@@ -892,7 +915,7 @@ public class JsonParser {
 	/**
 	 * 解析 Order 元素, 分为2种格式：1. "column desc", 2. "+column". 默认升序
 	 * 
-	 * @param orderElement
+	 * @param orderString
 	 * @return
 	 */
 	public OrderItem parseOrder(String orderString) {
@@ -967,6 +990,9 @@ public class JsonParser {
 		if (column == null) { // 不是列名的情况, 如函数
 			return new ColumnItem(columnString, alias);
 		} else {
+			if (Strings.isNullOrEmpty(alias)) {
+				alias = getRandomString(6);
+			}
 			TableItem tableItem = getMainTableItem(column.getTable());
 			if (tableItem != null) {
 				return new ColumnItem(column, alias, tableItem);
@@ -1112,8 +1138,16 @@ public class JsonParser {
 		if (!validAttribute(JsonAttributes.NATIVE)) {
 			return;
 		}
-		JsonElement nativeElement = jsonData.get(JsonAttributes.NATIVE);
-		nativeContent = nativeElement.getAsString();
+		nativeContent = jsonData.get(JsonAttributes.NATIVE).getAsString();
+	}
+
+	private void parseResult() {
+		if (!validAttribute(JsonAttributes.RESULT)) {
+			return;
+		}
+		String resultString = jsonData.get(JsonAttributes.RESULT).getAsString();
+		ResultType resultType = ResultType.from(resultString);
+		action.setResultType(resultType);
 	}
 
 	private boolean validAttribute(String attribute) {
@@ -1169,6 +1203,14 @@ public class JsonParser {
 
 	public boolean isNative() {
 		return operation != null && operation == Operation.NATIVE;
+	}
+
+	public boolean isResultFile() {
+		return jsonData.has(JsonAttributes.RESULT);
+	}
+
+	public boolean isTemplate() {
+		return jsonData.has(JsonAttributes.TEMPLATE);
 	}
 
 	public DataContext getDataContext() {

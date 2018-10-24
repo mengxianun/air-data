@@ -5,16 +5,17 @@ import java.util.List;
 import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Schema;
 import com.github.mengxianun.core.schema.Table;
+import com.google.gson.JsonElement;
 
 public interface DataContext {
 
-	public Object action(Action action);
+	public JsonElement action(Action action);
 
-	public Object action(Action... actions);
+	public JsonElement action(Action... actions);
 
-	public Object executeNative(String script);
+	public JsonElement executeNative(String script);
 
-	public Object executeNative(Table table, String script);
+	public JsonElement executeNative(Table table, String script);
 
 	public List<Schema> getSchemas();
 

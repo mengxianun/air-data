@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.mengxianun.core.attributes.ConfigAttributes;
+import com.github.mengxianun.core.attributes.DataSourceAttributes;
 import com.github.mengxianun.core.attributes.TableConfigAttributes;
 import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.schema.Column;
@@ -98,7 +99,7 @@ public abstract class AbstractTranslator implements Translator {
 		for (Entry<String, JsonElement> entry : dataSourcesJsonObject.entrySet()) {
 			String dataSourceName = entry.getKey();
 			JsonObject dataSourceJsonObject = dataSourcesJsonObject.getAsJsonObject(dataSourceName);
-			String type = dataSourceJsonObject.getAsJsonPrimitive(ConfigAttributes.DATASOURCE_TYPE).getAsString();
+			String type = parseDataContextType(dataSourceName, dataSourceJsonObject);
 			for (DataContextFactory dataContextFactory : factories) {
 				if (dataContextFactory.getType().equals(type)) {
 					dataSourceJsonObject.remove(ConfigAttributes.DATASOURCE_TYPE);
@@ -108,6 +109,29 @@ public abstract class AbstractTranslator implements Translator {
 				}
 			}
 		}
+	}
+
+	/**
+	 * 解析数据源类型, 如果指定了 type 属性, 以 指定的 type 为准. 如果没有指定 type 属性, 则从url属性中解析数据源类型
+	 * 
+	 * @param dataSourceName
+	 * @param dataSourceJsonObject
+	 * @return
+	 */
+	private String parseDataContextType(String dataSourceName, JsonObject dataSourceJsonObject) {
+		if (dataSourceJsonObject.has(ConfigAttributes.DATASOURCE_TYPE)) {
+			return dataSourceJsonObject.get(ConfigAttributes.DATASOURCE_TYPE).getAsString();
+		} else {
+			if (dataSourceJsonObject.has(DataSourceAttributes.URL)) {
+				String url = dataSourceJsonObject.get(DataSourceAttributes.URL).getAsString();
+				for (DataContextFactory dataContextFactory : factories) {
+					if (url.contains(dataContextFactory.getType())) {
+						return dataContextFactory.getType();
+					}
+				}
+			}
+		}
+		throw new DataException(String.format("Data source [%s] lacks the type attribute", dataSourceName));
 	}
 
 	/**

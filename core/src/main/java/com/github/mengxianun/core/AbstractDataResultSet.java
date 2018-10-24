@@ -1,33 +1,24 @@
 package com.github.mengxianun.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
 
-import com.opencsv.CSVWriterBuilder;
-import com.opencsv.ICSVWriter;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
 
 public abstract class AbstractDataResultSet implements DataResultSet {
 
 	protected long took;
 
-	protected Object data;
+	protected JsonElement data;
 
 	protected int code;
 	protected String message;
 
 	public AbstractDataResultSet() {
-
-	}
-
-	public AbstractDataResultSet(long took, Object data) {
-		this.took = took;
-		this.data = data;
-		this.code = ResultStatus.SUCCESS.code();
-		this.message = ResultStatus.SUCCESS.message();
+		this(ResultStatus.SUCCESS);
 	}
 
 	public AbstractDataResultSet(int code, String message) {
@@ -35,53 +26,61 @@ public abstract class AbstractDataResultSet implements DataResultSet {
 		this.message = message;
 	}
 
+	public AbstractDataResultSet(long took, JsonElement data) {
+		this(ResultStatus.SUCCESS.code(), ResultStatus.SUCCESS.message());
+		this.took = took;
+		this.data = data;
+	}
+
 	public AbstractDataResultSet(ResultStatus resultStatus) {
-		this.code = ResultStatus.SUCCESS.code();
-		this.message = ResultStatus.SUCCESS.message();
+		this(ResultStatus.SUCCESS.code(), ResultStatus.SUCCESS.message());
 	}
 
 	@Override
-	public InputStream getDataStream(ResultType resultType) throws IOException {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		CSVWriterBuilder csvWriterBuilder = new CSVWriterBuilder(
-				new OutputStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8));
-		try (ICSVWriter icsvWriter = csvWriterBuilder.build()) {
-			// icsvWriter.writeNext(columnHeader.toArray(new String[] {}));
-			// icsvWriter.writeNext(columnHeaderDisplay.toArray(new String[] {}));
+	public boolean isFile() {
+		return false;
+	}
+
+	@Override
+	public Object getData() {
+		if (data == null) {
+			return null;
 		}
-		return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+		if (data.isJsonArray()) {
+			Type dataType = new TypeToken<List<Map<String, Object>>>() {
+			}.getType();
+			return new Gson().fromJson(data, dataType);
+		} else if (data.isJsonObject()) {
+			Type dataType = new TypeToken<Map<String, Object>>() {
+			}.getType();
+			return new Gson().fromJson(data, dataType);
+		} else {
+			Type dataType = new TypeToken<Object>() {
+			}.getType();
+			return new Gson().fromJson(data, dataType);
+		}
+	}
+
+	@Override
+	public JsonElement getJsonData() {
+		return data;
+	}
+
+	@Override
+	public boolean succeed() {
+		return this.code == ResultStatus.SUCCESS.code();
 	}
 
 	public long getTook() {
 		return took;
 	}
 
-	public void setTook(long took) {
-		this.took = took;
-	}
-
-	public Object getData() {
-		return data;
-	}
-
-	public void setData(Object data) {
-		this.data = data;
-	}
-
 	public int getCode() {
 		return code;
 	}
 
-	public void setCode(int code) {
-		this.code = code;
-	}
-
 	public String getMessage() {
 		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
 	}
 
 }

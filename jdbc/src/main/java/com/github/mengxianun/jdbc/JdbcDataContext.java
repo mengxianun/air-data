@@ -5,24 +5,17 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.RowProcessor;
-import org.apache.commons.dbutils.handlers.MapHandler;
-import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.mengxianun.core.AbstractDataContext;
 import com.github.mengxianun.core.Action;
-import com.github.mengxianun.core.DataResultSet;
 import com.github.mengxianun.core.MetaData;
 import com.github.mengxianun.core.ResultStatus;
 import com.github.mengxianun.core.SQLBuilder;
@@ -32,7 +25,12 @@ import com.github.mengxianun.core.schema.DefaultColumn;
 import com.github.mengxianun.core.schema.DefaultSchema;
 import com.github.mengxianun.core.schema.DefaultTable;
 import com.github.mengxianun.core.schema.Schema;
+import com.github.mengxianun.jdbc.dbutils.handler.JsonArrayHandler;
+import com.github.mengxianun.jdbc.dbutils.handler.JsonObjectHandler;
+import com.github.mengxianun.jdbc.dbutils.processor.JsonRowProcessor;
 import com.github.mengxianun.jdbc.dialect.JdbcDialectFactory;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class JdbcDataContext extends AbstractDataContext {
@@ -47,7 +45,7 @@ public class JdbcDataContext extends AbstractDataContext {
 
 	protected QueryRunner runner;
 
-	protected RowProcessor convert = new BasicRowProcessor();
+	protected JsonRowProcessor convert = new JsonRowProcessor();
 
 	public JdbcDataContext() {
 	}
@@ -322,26 +320,27 @@ public class JdbcDataContext extends AbstractDataContext {
 	}
 
 	@Override
-	public Object action(Action action) {
-		Object data = null;
+	public JsonElement action(Action action) {
+		JsonElement result = null;
 		SQLBuilder sqlBuilder = new SQLBuilder(action);
 		String sql = sqlBuilder.getSql();
 		List<Object> params = sqlBuilder.getParams();
 		try {
 			if (action.isDetail()) {
-				data = runner.query(sql, new MapHandler(convert), params.toArray());
+				result = runner.query(sql, new JsonObjectHandler(convert), params.toArray());
 			} else if (action.isSelect()) {
-				data = runner.query(sql, new MapListHandler(convert), params.toArray());
+				result = runner.query(sql, new JsonArrayHandler(convert), params.toArray());
 			} else if (action.isInsert()) {
 				Object primaryKey = runner.insert(sql, new ScalarHandler<>(), params.toArray());
-				Map<String, Object> map = new HashMap<>();
-				map.put(ResultAttributes.PRIMARY_KEY.toString().toLowerCase(), primaryKey);
-				data = map;
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.add(ResultAttributes.PRIMARY_KEY.toString().toLowerCase(),
+						new Gson().toJsonTree(primaryKey));
+				result = jsonObject;
 			} else if (action.isUpdate() || action.isDelete()) {
 				int count = runner.update(sql, params.toArray());
-				Map<String, Object> map = new HashMap<>();
-				map.put(ResultAttributes.COUNT.toString().toLowerCase(), count);
-				data = map;
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty(ResultAttributes.COUNT.toString().toLowerCase(), count);
+				result = jsonObject;
 			}
 		} catch (SQLException e) {
 			logger.error(ResultStatus.DATASOURCE_SQL_FAILED.message(), e);
@@ -351,37 +350,39 @@ public class JdbcDataContext extends AbstractDataContext {
 			logger.debug("SQL: {}", sql);
 			logger.debug("Params: {}", params);
 		}
-		return data;
+		return result;
 	}
 
 	@Override
-	public DataResultSet action(Action... actions) {
+	public JsonElement action(Action... actions) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object executeNative(String script) {
-		Object data = null;
+	public JsonElement executeNative(String script) {
+		JsonElement result = null;
 		script = script.trim();
 		try {
 			if (script.startsWith(JsonAttributes.SELECT)) {
-				data = runner.query(script, new MapListHandler());
+				result = runner.query(script, new JsonArrayHandler());
 			} else if (script.startsWith(JsonAttributes.INSERT)) {
 				Object primaryKey = runner.insert(script, new ScalarHandler<>());
-				Map<String, Object> map = new HashMap<>();
-				map.put(ResultAttributes.PRIMARY_KEY.toString().toLowerCase(), primaryKey);
-				data = map;
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.add(ResultAttributes.PRIMARY_KEY.toString().toLowerCase(),
+						new Gson().toJsonTree(primaryKey));
+				result = jsonObject;
 			} else if (script.startsWith(JsonAttributes.UPDATE) || script.startsWith(JsonAttributes.DELETE)) {
 				int count = runner.update(script);
-				Map<String, Object> map = new HashMap<>();
-				map.put(ResultAttributes.COUNT.toString().toLowerCase(), count);
+				JsonObject jsonObject = new JsonObject();
+				jsonObject.addProperty(ResultAttributes.COUNT.toString().toLowerCase(), count);
+				result = jsonObject;
 			}
 		} catch (SQLException e) {
 			logger.error(ResultStatus.NATIVE_FAILED.message(), e);
 			throw new JdbcDataException(ResultStatus.NATIVE_FAILED);
 		}
-		return data;
+		return result;
 	}
 
 }

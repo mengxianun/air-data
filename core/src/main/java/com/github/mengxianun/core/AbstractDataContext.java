@@ -5,6 +5,7 @@ import java.util.List;
 import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Schema;
 import com.github.mengxianun.core.schema.Table;
+import com.google.gson.JsonElement;
 
 public abstract class AbstractDataContext implements DataContext {
 
@@ -15,7 +16,7 @@ public abstract class AbstractDataContext implements DataContext {
 	protected abstract void initializeMetaData();
 
 	@Override
-	public Object executeNative(Table table, String script) {
+	public JsonElement executeNative(Table table, String script) {
 		return executeNative(script);
 	}
 

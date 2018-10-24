@@ -17,14 +17,14 @@ public class JoinTest extends TestSupport {
 	@Test
 	void testJoin() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "join.json");
-		JsonArray result = (JsonArray) dataResultSet.getData();
+		JsonArray result = (JsonArray) dataResultSet.getJsonData();
 		assertTrue(result.size() > 0);
 	}
 
 	@Test
 	void testJoinLimit() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "join_limit.json");
-		JsonArray result = (JsonArray) dataResultSet.getData();
+		JsonArray result = (JsonArray) dataResultSet.getJsonData();
 		assertEquals(result.size(), 2);
 	}
 

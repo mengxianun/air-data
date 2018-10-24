@@ -1,7 +1,7 @@
 package com.github.mengxianun.core;
 
 /**
- * Json 构建器
+ * Json 构建器, 预留
  * 
  * @author mengxiangyun
  *

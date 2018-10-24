@@ -3,6 +3,12 @@ package com.github.mengxianun.core;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 预留
+ * 
+ * @author mengxiangyun
+ *
+ */
 public class DefaultJsonBuilder implements JsonBuilder {
 
 	private String initJson;

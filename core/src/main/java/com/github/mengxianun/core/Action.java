@@ -27,6 +27,7 @@ public class Action {
 	private List<OrderItem> orderItems;
 	private LimitItem limitItem;
 	private List<ValueItem> valueItems;
+	private ResultType resultType;
 
 	public Action() {
 		this.tableItems = new ArrayList<>();
@@ -56,7 +57,10 @@ public class Action {
 			return;
 		}
 		for (ColumnItem existColumnItem : columnItems) {
-			if (existColumnItem.getColumn() == columnItem.getColumn()) {
+			if (existColumnItem.getColumn() == columnItem.getColumn() && (existColumnItem.getAlias() != null
+					&& existColumnItem.getAlias().equals(columnItem.getAlias()))
+					&& (existColumnItem.getExpression() != null
+							&& existColumnItem.getExpression().equals(columnItem.getExpression()))) {
 				return;
 			}
 		}
@@ -203,6 +207,14 @@ public class Action {
 
 	public void setValueItems(List<ValueItem> valueItems) {
 		this.valueItems = valueItems;
+	}
+
+	public ResultType getResultType() {
+		return resultType;
+	}
+
+	public void setResultType(ResultType resultType) {
+		this.resultType = resultType;
 	}
 
 }

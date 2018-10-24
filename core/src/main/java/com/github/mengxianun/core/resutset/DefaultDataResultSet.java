@@ -2,18 +2,19 @@ package com.github.mengxianun.core.resutset;
 
 import com.github.mengxianun.core.AbstractDataResultSet;
 import com.github.mengxianun.core.ResultStatus;
+import com.google.gson.JsonElement;
 
 public class DefaultDataResultSet extends AbstractDataResultSet {
 
 	public DefaultDataResultSet() {
-		super(0, null);
+		super();
 	}
 
-	public DefaultDataResultSet(Object data) {
-		super(0, data);
+	public DefaultDataResultSet(int code, String message) {
+		super(code, message);
 	}
 
-	public DefaultDataResultSet(long took, Object data) {
+	public DefaultDataResultSet(long took, JsonElement data) {
 		super(took, data);
 	}
 

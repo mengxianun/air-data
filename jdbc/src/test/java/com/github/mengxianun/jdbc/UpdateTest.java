@@ -18,7 +18,7 @@ public class UpdateTest extends TestSupport {
 	@Test
 	void testUpdateTable() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "update.json");
-		JsonObject result = (JsonObject) dataResultSet.getData();
+		JsonObject result = (JsonObject) dataResultSet.getJsonData();
 		assertTrue(result.has(ResultAttributes.COUNT.toString().toLowerCase()));
 		int count = result.getAsJsonPrimitive(ResultAttributes.COUNT.toString().toLowerCase()).getAsInt();
 		assertEquals(count, 1);
