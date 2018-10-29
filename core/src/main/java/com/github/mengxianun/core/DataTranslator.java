@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 
+import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,9 +14,6 @@ import com.github.mengxianun.core.item.TableItem;
 import com.github.mengxianun.core.resutset.DefaultDataResultSet;
 import com.github.mengxianun.core.resutset.FailDataResultSet;
 import com.github.mengxianun.core.schema.Table;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 public class DataTranslator extends AbstractTranslator {
 
@@ -42,16 +40,16 @@ public class DataTranslator extends AbstractTranslator {
 	public DataResultSet translate(String json, String... filterExpressions) {
 		long start = System.currentTimeMillis();
 		JsonElement result = null;
-		JsonObject jsonData = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
-		JsonParser jsonParser = new JsonParser(jsonData, this);
-		jsonParser.parse();
-		// -------------------------
-		// 添加额外过滤条件, 待优化
-		// -------------------------
-		if (filterExpressions != null && filterExpressions.length > 0) {
-			Arrays.asList(filterExpressions).forEach(jsonParser::addFilter);
-		}
 		try {
+			JsonObject jsonData = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
+			JsonParser jsonParser = new JsonParser(jsonData, this);
+			jsonParser.parse();
+			// -------------------------
+			// 添加额外过滤条件, 待优化
+			// -------------------------
+			if (filterExpressions != null && filterExpressions.length > 0) {
+				Arrays.asList(filterExpressions).forEach(jsonParser::addFilter);
+			}
 			if (jsonParser.isStruct()) {
 				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
 				Table table = tableItem.getTable();
@@ -74,6 +72,8 @@ public class DataTranslator extends AbstractTranslator {
 		} catch (DataException e) {
 			logger.error(e.getMessage(), e.getCause());
 			return new FailDataResultSet(e.getCode(), e.getMessage());
+		} catch (JsonSyntaxException e) {
+			return new FailDataResultSet(ResultStatus.JSON_FORMAT_ERROR);
 		} catch (Exception e) {
 			return new FailDataResultSet(ResultStatus.TRANSLATION_FAILED);
 		}
