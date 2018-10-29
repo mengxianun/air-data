@@ -41,6 +41,8 @@ public enum ResultStatus {
 	JSON_UNSUPPORTED_ATTRIBUTE(10401, "Unsupported attributes [%s]"),
 	// JSON 属性格式错误
 	JSON_ATTRIBUTE_FORMAT_ERROR(10402, "Json attribute [%s] format error, %s."),
+	// JSON 解析失败
+	JSON_FORMAT_ERROR(10403, "JSON format error."),
 
 	/*
 	 * 其他错误
