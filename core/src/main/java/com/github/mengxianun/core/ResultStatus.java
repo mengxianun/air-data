@@ -31,6 +31,8 @@ public enum ResultStatus {
 	DATASOURCE_SQL_FAILED(10204, "SQL statement execution failed. SQL: %s"),
 	// 关联关系不存在
 	DATASOURCE_RELATIONSHIP_NOT_FOUND(10205, "The association relation of [%s] table is not found"),
+	// 其他操作异常
+	DATASOURCE_EXCEPTION(10210, "%s"),
 
 	/**
 	 * JSON 错误
