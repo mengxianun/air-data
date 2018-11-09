@@ -17,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
+import com.github.mengxianun.core.interceptor.TranslatorInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,10 @@ public abstract class AbstractTranslator implements Translator {
 		configuration.addProperty(ConfigAttributes.DEFAULT_DATASOURCE, "");
 		configuration.addProperty(ConfigAttributes.TABLE_CONFIG_PATH, DEFAULT_TABLE_CONFIG_PATH);
 		configuration.add(ConfigAttributes.TABLE_CONFIG, JsonNull.INSTANCE);
+		// 预处理开关
+		configuration.add(ConfigAttributes.PRE_HANDLER, JsonNull.INSTANCE);
+		// 权限控制
+		configuration.add(ConfigAttributes.AUTH_CONTROL, JsonNull.INSTANCE);
 	}
 
 	protected void readConfig(String configFile) {
@@ -249,6 +254,20 @@ public abstract class AbstractTranslator implements Translator {
 
 	public String getDefaultDataSource() {
 		return configuration.getAsJsonPrimitive(ConfigAttributes.DEFAULT_DATASOURCE).getAsString();
+	}
+
+	/**
+	 * 预处理，在取得数据之前的处理，比如：检验表的操作权限
+	 *
+	 * @param parser
+	 */
+	protected void preHandler(com.github.mengxianun.core.JsonParser parser) {
+		ServiceLoader<TranslatorInterceptor> translatorInterceptors = ServiceLoader.load(TranslatorInterceptor.class);
+		if (translatorInterceptors != null) {
+			for (TranslatorInterceptor interceptor : translatorInterceptors) {
+				interceptor.preHandler(parser, configuration);
+			}
+		}
 	}
 
 }

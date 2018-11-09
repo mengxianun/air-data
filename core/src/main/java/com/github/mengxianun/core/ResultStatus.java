@@ -14,7 +14,7 @@ public enum ResultStatus {
 	/**
 	 * 权限错误
 	 */
-	AUTHENTICATION(10100, ""),
+	AUTHENTICATION(10100, "You don't have permission to access the table"),
 
 	/**
 	 * 数据源错误

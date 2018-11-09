@@ -1,10 +1,7 @@
 package com.github.mengxianun.core;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Random;
 
 import com.github.mengxianun.core.attributes.AssociationType;
 import com.github.mengxianun.core.exception.DataException;
@@ -544,7 +541,7 @@ public class JsonParser {
 	/**
 	 * 添加指定表的所有列
 	 * 
-	 * @param table
+	 * @param tableName
 	 */
 	private void createTableColumns(String tableName) {
 		if (tableName == null) {
@@ -729,7 +726,7 @@ public class JsonParser {
 	/**
 	 * 解析条件运算符
 	 * 
-	 * @param quote
+	 * @param filterString
 	 * @return
 	 */
 	private Cond parseCond(String filterString) {
@@ -1227,6 +1224,23 @@ public class JsonParser {
 
 	public String getNativeContent() {
 		return nativeContent;
+	}
+
+	private static final String MODULE_NAME = "moduleName";
+	private static final String MODULE_OPERATE = "moduleOperate";
+	public String getModuleName() {
+		return jsonData.get(MODULE_NAME) != null ? jsonData.get(MODULE_NAME).getAsString() : "";
+	}
+	public List<String> getModuleOperates() {
+		List<String> list = new ArrayList<>();
+		if (jsonData.get(MODULE_OPERATE) != null && jsonData.get(MODULE_OPERATE).isJsonArray()) {
+			Iterator<JsonElement> iterator = jsonData.get(MODULE_OPERATE).getAsJsonArray().iterator();
+			while (iterator.hasNext()) {
+				JsonElement jsonElement = iterator.next();
+				list.add(jsonElement.getAsString());
+			}
+		}
+		return list;
 	}
 
 }
