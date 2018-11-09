@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.mengxianun.core.AbstractDataContext;
 import com.github.mengxianun.core.Action;
-import com.github.mengxianun.core.MetaData;
 import com.github.mengxianun.core.ResultStatus;
 import com.github.mengxianun.core.SQLBuilder;
 import com.github.mengxianun.core.attributes.ResultAttributes;
@@ -30,6 +29,7 @@ import com.github.mengxianun.jdbc.dbutils.handler.JsonObjectHandler;
 import com.github.mengxianun.jdbc.dbutils.processor.JsonRowProcessor;
 import com.github.mengxianun.jdbc.dialect.JdbcDialectFactory;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -38,13 +38,13 @@ public class JdbcDataContext extends AbstractDataContext {
 	private static final Logger logger = LoggerFactory.getLogger(JdbcDataContext.class);
 
 	protected DataSource dataSource;
-
+	// 当前线程操作的数据库连接
 	protected static ThreadLocal<Connection> threadLocalConnection = new ThreadLocal<>();
-
+	// 当前线程操作是否自动关闭连接
 	protected static ThreadLocal<Boolean> closeConnection = new ThreadLocal<>();
-
+	//
 	protected QueryRunner runner;
-
+	// 结果行处理器
 	protected JsonRowProcessor convert = new JsonRowProcessor();
 
 	public JdbcDataContext() {
@@ -72,9 +72,7 @@ public class JdbcDataContext extends AbstractDataContext {
 			// String databaseProductVersion = databaseMetaData.getDatabaseProductVersion();
 			// String url = databaseMetaData.getURL();
 			String identifierQuoteString = databaseMetaData.getIdentifierQuoteString();
-
 			String defaultSchemaName = connection.getCatalog();
-
 			metaData.setIdentifierQuoteString(identifierQuoteString);
 			metaData.setDefaultSchemaName(defaultSchemaName);
 
@@ -85,7 +83,6 @@ public class JdbcDataContext extends AbstractDataContext {
 				if ("information_schema".equals(schemaName)) {
 					continue;
 				}
-
 				schemas.add(new DefaultSchema(schemaName));
 			}
 
@@ -98,9 +95,7 @@ public class JdbcDataContext extends AbstractDataContext {
 				String tableName = tablesResultSet.getString(3);
 				// String tableType = tablesResultSet.getString(4);
 				String remarks = tablesResultSet.getString(5);
-
 				defaultSchema.addTable(new DefaultTable(tableName, defaultSchema, remarks));
-
 			}
 
 			// column metadata
@@ -119,121 +114,29 @@ public class JdbcDataContext extends AbstractDataContext {
 
 				DefaultTable table = (DefaultTable) metaData.getTable(defaultSchemaName, columnTable);
 				table.addColumn(new DefaultColumn(columnName, table, columnNullable, columnRemarks, columnSize));
-
 			}
 
 		} catch (SQLException e) {
-			throw new JdbcDataException(e);
-		}
-	}
-
-	@Deprecated
-	protected void initializeMetaData_old() {
-		JsonObject source = new JsonObject();
-		JsonObject schemas = new JsonObject();
-		source.add(MetaData.SCHEMAS, schemas);
-		try (final Connection connection = getConnection()) {
-			DatabaseMetaData databaseMetaData = connection.getMetaData();
-			String databaseProductName = databaseMetaData.getDatabaseProductName();
-			String databaseProductVersion = databaseMetaData.getDatabaseProductVersion();
-			String url = databaseMetaData.getURL();
-			String identifierQuoteString = databaseMetaData.getIdentifierQuoteString();
-
-			source.addProperty(MetaData.NAME, databaseProductName);
-			source.addProperty(MetaData.VERSION, databaseProductVersion);
-			source.addProperty(MetaData.URL, url);
-			source.addProperty(MetaData.IDENTIFIER_QUOTE_STRING, identifierQuoteString);
-
-			String defaultSchemaName = connection.getCatalog();
-			source.addProperty(MetaData.DEFAULT_SCHEMA, defaultSchemaName);
-
-			// schema metadata
-			ResultSet catalogsResultSet = databaseMetaData.getCatalogs();
-			while (catalogsResultSet.next()) {
-				String schemaName = catalogsResultSet.getString(1);
-				if ("information_schema".equals(schemaName)) {
-					continue;
-				}
-
-				JsonObject schema = new JsonObject();
-				schema.addProperty(MetaData.NAME, schemaName);
-
-				schemas.add(schemaName, schema);
-			}
-
-			// table metadata
-			JsonObject defaultSchema = schemas.getAsJsonObject(defaultSchemaName);
-			JsonObject tables = new JsonObject();
-			defaultSchema.add(MetaData.TABLES, tables);
-			ResultSet tablesResultSet = databaseMetaData.getTables(defaultSchemaName, null, "%", null);
-			while (tablesResultSet.next()) {
-				String tableSchema = tablesResultSet.getString(1);
-				String tableName = tablesResultSet.getString(3);
-				String tableType = tablesResultSet.getString(4);
-				String remarks = tablesResultSet.getString(5);
-
-				JsonObject table = new JsonObject();
-				table.addProperty(MetaData.SCHEMA, tableSchema);
-				table.addProperty(MetaData.NAME, tableName);
-				table.addProperty(MetaData.TYPE, tableType);
-				table.addProperty(MetaData.REMARKS, remarks);
-				table.add(MetaData.COLUMNS, new JsonObject());
-
-				tables.add(tableName, table);
-			}
-
-			// column metadata
-			ResultSet columnsResultSet = databaseMetaData.getColumns(defaultSchemaName, null, "%", null);
-			while (columnsResultSet.next()) {
-				String columnSchema = columnsResultSet.getString(1);
-				String columnTable = columnsResultSet.getString(3);
-				String columnName = columnsResultSet.getString(4);
-				String columnDataType = columnsResultSet.getString(5);
-				String columnTypeName = columnsResultSet.getString(6);
-				String columnSize = columnsResultSet.getString(7);
-				Boolean columnNullable = columnsResultSet.getBoolean(11);
-				String columnRemarks = columnsResultSet.getString(12);
-				Boolean isAutoincrement = columnsResultSet.getBoolean(23);
-
-				JsonObject column = new JsonObject();
-				column.addProperty(MetaData.SCHEMA, columnSchema);
-				column.addProperty(MetaData.TABLE, columnTable);
-				column.addProperty(MetaData.NAME, columnName);
-				column.addProperty(MetaData.COLUMN_DATA_TYPE, columnDataType);
-				column.addProperty(MetaData.COLUMN_TYPE_NAME, columnTypeName);
-				column.addProperty(MetaData.COLUMN_SIZE, columnSize);
-				column.addProperty(MetaData.COLUMN_NULLABLE, columnNullable);
-				column.addProperty(MetaData.REMARKS, columnRemarks);
-				column.addProperty(MetaData.COLUMN_IS_AUTOINCREMENT, isAutoincrement);
-
-				JsonObject table = tables.getAsJsonObject(columnTable);
-				JsonObject columns = table.getAsJsonObject(MetaData.COLUMNS);
-				columns.add(columnName, column);
-			}
-
-		} catch (Exception e) {
-			// TODO: handle exception
+			logger.error("Initialize metadata failed.", e);
+			throw new JdbcDataException(ResultStatus.DATASOURCE_EXCEPTION.fill(e.getMessage()));
 		}
 	}
 
 	public void startTransaction() {
 		Connection conn = threadLocalConnection.get();
-		if (conn == null) {
-			try {
-				conn = dataSource.getConnection();
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
+		try {
+			if (conn == null) {
+				conn = getConnection();
 			}
 			threadLocalConnection.set(conn);
-		}
-		try {
 			conn.setAutoCommit(false);
 			closeConnection.set(false);
 			if (logger.isDebugEnabled()) {
 				logger.debug("Start new transaction.");
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException(e);
+			logger.error("Start new transaction failed.", e);
+			throw new JdbcDataException(ResultStatus.DATASOURCE_EXCEPTION.fill(e.getMessage()));
 		}
 	}
 
@@ -243,14 +146,15 @@ public class JdbcDataContext extends AbstractDataContext {
 			try {
 				return dataSource.getConnection();
 			} catch (SQLException e) {
-				throw new JdbcDataException("Could not establish connection", e);
+				logger.error("Could not establish connection", e);
+				throw new JdbcDataException(ResultStatus.DATASOURCE_EXCEPTION.fill(e.getMessage()));
 			}
 		} else {
 			return conn;
 		}
 	}
 
-	public void commit() throws SQLException {
+	public void commit() {
 		Connection conn = threadLocalConnection.get();
 		if (conn != null) {
 			try {
@@ -259,12 +163,13 @@ public class JdbcDataContext extends AbstractDataContext {
 					logger.debug("Transaction commit.");
 				}
 			} catch (SQLException e) {
-				throw new RuntimeException(e);
+				logger.error("Transaction commit failed.", e);
+				throw new JdbcDataException(ResultStatus.DATASOURCE_EXCEPTION.fill(e.getMessage()));
 			}
 		}
 	}
 
-	public void rollback() throws SQLException {
+	public void rollback() {
 		Connection conn = threadLocalConnection.get();
 		if (conn != null) {
 			try {
@@ -273,7 +178,8 @@ public class JdbcDataContext extends AbstractDataContext {
 					logger.debug("Transaction rollback.");
 				}
 			} catch (SQLException e) {
-				throw new RuntimeException(e);
+				logger.error("Transaction rollback failed.", e);
+				throw new JdbcDataException(ResultStatus.DATASOURCE_EXCEPTION.fill(e.getMessage()));
 			}
 		}
 	}
@@ -287,7 +193,8 @@ public class JdbcDataContext extends AbstractDataContext {
 					logger.debug("Transaction close.");
 				}
 			} catch (SQLException e) {
-				throw new RuntimeException(e);
+				logger.error("Transaction close failed.", e);
+				throw new JdbcDataException(ResultStatus.DATASOURCE_EXCEPTION.fill(e.getMessage()));
 			} finally {
 				threadLocalConnection.remove();
 				closeConnection.set(true);
@@ -301,7 +208,7 @@ public class JdbcDataContext extends AbstractDataContext {
 	 * @param atoms
 	 * @throws SQLException
 	 */
-	public void trans(Atom... atoms) throws SQLException {
+	public void trans(Atom... atoms) {
 		if (null == atoms) {
 			return;
 		}
@@ -355,8 +262,19 @@ public class JdbcDataContext extends AbstractDataContext {
 
 	@Override
 	public JsonElement action(Action... actions) {
-		// TODO Auto-generated method stub
-		return null;
+		JsonArray transactionResult = new JsonArray();
+		trans(new Atom() {
+
+			@Override
+			public void run() {
+				for (Action action : actions) {
+					JsonElement actionResult = action(action);
+					transactionResult.add(actionResult);
+				}
+
+			}
+		});
+		return transactionResult;
 	}
 
 	@Override

@@ -15,6 +15,10 @@ import com.github.mengxianun.core.item.TableItem;
 import com.github.mengxianun.core.resutset.DefaultDataResultSet;
 import com.github.mengxianun.core.resutset.FailDataResultSet;
 import com.github.mengxianun.core.schema.Table;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 
 public class DataTranslator extends AbstractTranslator {
 
@@ -116,6 +120,7 @@ public class DataTranslator extends AbstractTranslator {
 				result = new Gson().toJsonTree(table);
 			} else if (jsonParser.isTransaction()) {
 				// to do
+
 			} else if (jsonParser.isNative()) {
 				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
 				Table table = tableItem.getTable();

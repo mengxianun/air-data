@@ -152,8 +152,11 @@ public class SQLBuilder {
 					List<FilterItem> filterItems = action.getFilterItems();
 					// 主表的条件
 					List<FilterItem> mainTableFilterItems = filterItems.stream()
-							.filter(e -> e.getColumnItem().getTableItem().getTable().getName().equals(table.getName()))
+							.filter(e -> e.getColumnItem().getTableItem().getTable() == table)
 							.collect(Collectors.toList());
+					// 基础表查询属于新查询, 这里创建一个新的TableItem
+					TableItem subQueryTableItem = new TableItem(table);
+					mainTableFilterItems.forEach(e -> e.getColumnItem().setTableItem(subQueryTableItem));
 					String mainTableWhereString = toWhere(mainTableFilterItems);
 					tablesBuilder.append("(").append(PREFIX_SELECT).append("*").append(PREFIX_FROM)
 							.append(table.getName()).append(mainTableWhereString).append(toLimit())
