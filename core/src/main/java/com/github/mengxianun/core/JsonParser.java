@@ -468,7 +468,7 @@ public class JsonParser {
 			alias = columnPart[1];
 		} else if (columnString.contains(" ")) {
 			String columnRegex = "^(?![0-9]*$)[a-zA-Z0-9_$()]+$";
-			String aliasRegex = "^(?![0-9]*$)[a-zA-Z0-9_$]+$";
+			String aliasRegex = "^(?![0-9]*$)[a-zA-Z0-9_$']+$";
 			String[] columnPart = columnString.split("\\s+");
 			if (columnPart.length == 2) {
 				if (columnPart[0].matches(columnRegex) && columnPart[1].matches(aliasRegex)) {
@@ -482,6 +482,9 @@ public class JsonParser {
 				if (backPart.matches(aliasRegex)) {
 					columnString = frontPart;
 					alias = backPart;
+					if (alias.startsWith("'") && alias.endsWith("'")) {
+						alias = alias.split("'")[1];
+					}
 				}
 			}
 		}

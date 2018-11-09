@@ -1,5 +1,6 @@
 package com.github.mengxianun.core;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.github.mengxianun.core.attributes.AssociationType;
@@ -68,8 +69,7 @@ public class DataRenderer {
 						Table joinTable = joinColumnItem.getTableItem().getTable();
 						if (existJoinTables.has(joinTable.getName())) {
 							JsonObject joinTableObject = existJoinTables.getAsJsonObject(joinTable.getName());
-							JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
-							addColumnValue(joinTableObject, columnItem, value);
+							addColumnValue(joinTableObject, columnItem, getValue(record, columnItem.getAlias()));
 							continue;
 						}
 						List<Table> parentTables = joinColumnItem.getParentTables();
@@ -99,18 +99,15 @@ public class DataRenderer {
 						// 记录出现过的 join 表
 						existJoinTables.add(joinTable.getName(), currentTableObject);
 
-						JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
-						addColumnValue(currentTableObject, columnItem, value);
+						addColumnValue(currentTableObject, columnItem, getValue(record, columnItem.getAlias()));
 					} else {
-						JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
-						addColumnValue(currentTableObject, columnItem, value);
+						addColumnValue(currentTableObject, columnItem, getValue(record, columnItem.getAlias()));
 					}
 				}
 			} else {
 				List<ColumnItem> columnItems = action.getColumnItems();
 				for (ColumnItem columnItem : columnItems) {
-					JsonPrimitive value = record.getAsJsonPrimitive(columnItem.getAlias());
-					addColumnValue(uniqueRecord, columnItem, value);
+					addColumnValue(uniqueRecord, columnItem, getValue(record, columnItem.getAlias()));
 				}
 			}
 		}
@@ -136,14 +133,7 @@ public class DataRenderer {
 			if (!(columnItem instanceof JoinColumnItem)) { // 主表列
 				// Column column = columnItem.getColumn();
 				String columnAlias = columnItem.getAlias();
-				Object value = null;
-				if (record.has(columnAlias)) {
-					value = record.get(columnAlias);
-				} else if (record.has(columnAlias.toUpperCase())) {
-					record.get(columnAlias.toUpperCase());
-				} else if (record.has(columnAlias.toLowerCase())) {
-					record.get(columnAlias.toLowerCase());
-				}
+				Object value = getValue(record, columnAlias);
 				uniqueKey.append(value.toString());
 			}
 		}
@@ -166,8 +156,7 @@ public class DataRenderer {
 					Table joinTable = joinColumnItem.getTableItem().getTable();
 					if (existJoinTables.has(joinTable.getName())) {
 						JsonObject joinTableObject = existJoinTables.getAsJsonObject(joinTable.getName());
-						JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
-						addColumnValue(joinTableObject, columnItem, value);
+						addColumnValue(joinTableObject, columnItem, getValue(data, columnItem.getAlias()));
 						continue;
 					}
 					List<Table> parentTables = joinColumnItem.getParentTables();
@@ -183,11 +172,9 @@ public class DataRenderer {
 					// 记录出现过的 join 表
 					existJoinTables.add(joinTable.getName(), currentTableObject);
 
-					JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
-					addColumnValue(currentTableObject, columnItem, value);
+					addColumnValue(currentTableObject, columnItem, getValue(data, columnItem.getAlias()));
 				} else {
-					JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
-					addColumnValue(jsonData, columnItem, value);
+					addColumnValue(jsonData, columnItem, getValue(data, columnItem.getAlias()));
 				}
 			}
 			return jsonData;
@@ -196,19 +183,54 @@ public class DataRenderer {
 		if (columnItems.isEmpty()) {
 			return new Gson().toJsonTree(data);
 		} else {
-			for (ColumnItem columnItem : columnItems) {
-				JsonPrimitive value = data.getAsJsonPrimitive(columnItem.getAlias());
-				addColumnValue(jsonData, columnItem, value);
-			}
+			columnItems.forEach(e -> addColumnValue(jsonData, e, getValue(data, e.getAlias())));
 		}
 		return jsonData;
 	}
 
-	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonPrimitive value) {
+	public JsonElement getValue(JsonObject record, String columnLabel) {
+		JsonElement value = null;
+		if (record.has(columnLabel)) {
+			value = record.get(columnLabel);
+		} else if (record.has(columnLabel.toUpperCase())) {
+			value = record.get(columnLabel.toUpperCase());
+		} else if (record.has(columnLabel.toLowerCase())) {
+			value = record.get(columnLabel.toLowerCase());
+		}
+		return value;
+	}
+
+	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonElement value) {
 		Column column = columnItem.getColumn();
 		String columnAlias = columnItem.getAlias();
 		String columnKey = column == null ? columnAlias : treatColumn(column.getName());
-		record.addProperty(columnKey, render(column, value));
+		if (value == null || value.isJsonNull()) {
+			record.addProperty(columnKey, (String) null);
+		} else {
+			JsonPrimitive primitive = value.getAsJsonPrimitive();
+			if (primitive.isNumber()) {
+				Number number = value.getAsNumber();
+				if (number instanceof Byte || number instanceof Short || number instanceof Integer
+						|| number instanceof Long) {
+					number = value.getAsLong();
+				} else if (number instanceof Float || number instanceof Double) {
+					number = value.getAsDouble();
+				} else if (number instanceof BigDecimal) {
+					// if (value.getAsBigDecimal().stripTrailingZeros().scale() <= 0) { // 整数
+					// number = value.getAsBigDecimal().longValue();
+					// } else {
+					// number = value.getAsBigDecimal().doubleValue();
+					// }
+				}
+				record.addProperty(columnKey, render(column, number));
+			} else if (primitive.isBoolean()) {
+				record.addProperty(columnKey, render(column, primitive.getAsBoolean()));
+			} else if (primitive.isString()) {
+				record.addProperty(columnKey, render(column, primitive.getAsString()));
+			} else {
+				record.addProperty(columnKey, render(column, primitive.getAsString()));
+			}
+		}
 	}
 
 	/**
@@ -221,15 +243,16 @@ public class DataRenderer {
 		return columnName.toLowerCase();
 	}
 
-	public String render(Column column, JsonPrimitive value) {
-		if (value == null) {
-			return null;
-		}
-		//////////////////
-		// JsonObject columnConfig = column.getConfig();
-		// to do
-		//////////////////
-		return value.getAsString();
+	public Number render(Column column, Number value) {
+		return value;
+	}
+
+	public Boolean render(Column column, Boolean value) {
+		return value;
+	}
+
+	public String render(Column column, String value) {
+		return value;
 	}
 
 	public JsonObject createJoinStructure(JsonObject currentTableObject, Table parentTable, Table joinTable) {

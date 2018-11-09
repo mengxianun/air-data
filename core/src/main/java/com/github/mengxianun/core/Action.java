@@ -129,6 +129,10 @@ public class Action {
 		return operation != null && operation == Operation.DELETE;
 	}
 
+	public boolean isLimit() {
+		return limitItem != null;
+	}
+
 	public Operation getOperation() {
 		return operation;
 	}
