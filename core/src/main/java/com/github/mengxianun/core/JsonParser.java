@@ -118,6 +118,9 @@ public class JsonParser {
 	}
 
 	public Action parse() {
+		if (isTransaction()) {
+			return null;
+		}
 		parseTables();
 
 		switch (operation) {
@@ -1231,6 +1234,10 @@ public class JsonParser {
 
 	public String getNativeContent() {
 		return nativeContent;
+	}
+
+	public JsonObject getJsonData() {
+		return jsonData;
 	}
 
 	private static final String MODULE_NAME = "moduleName";

@@ -75,7 +75,10 @@ public class TestSupport {
 	}
 
 	DataResultSet run(String jsonFile) {
-		String json = readJson(jsonFile);
+		return runJson(readJson(jsonFile));
+	}
+
+	DataResultSet runJson(String json) {
 		DataResultSet dataResultSet = translator.translate(json);
 		LOG.info("-----------------Json-----------------");
 		LOG.info(json);

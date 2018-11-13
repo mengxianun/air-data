@@ -2,7 +2,9 @@ package com.github.mengxianun.core;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +13,12 @@ import com.github.mengxianun.core.attributes.ConfigAttributes;
 import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.exception.PreHandlerException;
 import com.github.mengxianun.core.item.TableItem;
+import com.github.mengxianun.core.json.JsonAttributes;
 import com.github.mengxianun.core.resutset.DefaultDataResultSet;
 import com.github.mengxianun.core.resutset.FailDataResultSet;
 import com.github.mengxianun.core.schema.Table;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -118,8 +122,23 @@ public class DefaultTranslator extends AbstractTranslator {
 				Table table = tableItem.getTable();
 				result = new Gson().toJsonTree(table);
 			} else if (jsonParser.isTransaction()) {
-				// to do
-
+				JsonObject jsonData = jsonParser.getJsonData();
+				JsonArray transactionArray = jsonData.getAsJsonArray(JsonAttributes.TRANSACTION);
+				List<Action> actions = new ArrayList<>();
+				DataContext dataContext = null;
+				for (int i = 0; i < transactionArray.size(); i++) {
+					JsonObject innerJsonData = transactionArray.get(i).getAsJsonObject();
+					JsonParser innerJsonParser = new JsonParser(innerJsonData, this);
+					Action action = innerJsonParser.parse();
+					actions.add(action);
+					// 将第一个Json操作的数据源作为整个事务数据源. 暂时不支持跨数据源事务
+					if (i == 0) {
+						dataContext = innerJsonParser.getDataContext();
+					}
+				}
+				if (dataContext != null) {
+					result = dataContext.action(actions.toArray(new Action[] {}));
+				}
 			} else if (jsonParser.isNative()) {
 				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
 				Table table = tableItem.getTable();

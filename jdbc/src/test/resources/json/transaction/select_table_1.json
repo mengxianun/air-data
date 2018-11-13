@@ -1,4 +1,0 @@
-{
-  "select":"transaction_table_1",
-  "fields":["id", "name"]
-}
