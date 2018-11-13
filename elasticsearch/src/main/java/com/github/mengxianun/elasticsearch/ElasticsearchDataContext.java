@@ -48,11 +48,11 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 		this.convert = new ElasticsearchRowProcessor();
 		closeConnection.set(true);
 		this.client = client;
-		initializeMetaData();
+		initializeMetadata();
 	}
 
 	@Override
-	public void initializeMetaData() {
+	public void initializeMetadata() {
 		JsonObject allMappings = null;
 		try {
 			// 查询所有索引的mapping
@@ -66,7 +66,7 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 		List<Schema> schemas = new ArrayList<>();
 		DefaultSchema schema = new DefaultSchema(VIRTUAL_SCHEMA);
 		schemas.add(schema);
-		metaData.setSchemas(schemas);
+		metadata.setSchemas(schemas);
 		for (String index : allMappings.keySet()) {
 			DefaultTable table = new DefaultTable(index);
 			schema.addTable(table);
