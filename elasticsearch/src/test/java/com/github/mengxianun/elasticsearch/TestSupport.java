@@ -3,14 +3,14 @@ package com.github.mengxianun.elasticsearch;
 import java.io.IOException;
 import java.net.URL;
 
-import com.github.mengxianun.core.DataTranslator;
+import com.github.mengxianun.core.DefaultTranslator;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.gson.JsonObject;
 
 public class TestSupport {
 
-	public static DataTranslator translator = new DataTranslator();
+	public static DefaultTranslator translator = new DefaultTranslator();
 	public static final String DB_URL = "jdbc:elasticsearch://192.168.201.171:9300/";
 	public static final String DATASOURCE_NAME = "ds";
 
