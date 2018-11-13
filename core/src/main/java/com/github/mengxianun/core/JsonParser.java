@@ -1,7 +1,11 @@
 package com.github.mengxianun.core;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Random;
 
 import com.github.mengxianun.core.attributes.AssociationType;
 import com.github.mengxianun.core.exception.DataException;
@@ -38,7 +42,7 @@ import com.google.gson.JsonObject;
  */
 public class JsonParser {
 
-	private final DataTranslator translator;
+	private final DefaultTranslator translator;
 	private DataContext dataContext;
 	// Json 对象
 	private final JsonObject jsonData;
@@ -51,7 +55,7 @@ public class JsonParser {
 	// 表关联关系, 内部 List Table 从左到右依次关联. 不包含主表
 	private List<List<Table>> tempJoins = new ArrayList<>();
 
-	public JsonParser(JsonObject jsonData, DataTranslator translator) {
+	public JsonParser(JsonObject jsonData, DefaultTranslator translator) {
 		this.jsonData = jsonData;
 		this.translator = translator;
 		parseOperation();

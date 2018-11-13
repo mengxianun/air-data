@@ -58,26 +58,26 @@ public class JdbcDataContext extends AbstractDataContext {
 		this.dialect = JdbcDialectFactory.getDialect(dataSource);
 		this.runner = new QueryRunner(dataSource);
 		closeConnection.set(true);
-		initializeMetaData();
+		initializeMetadata();
 	}
 
-
-	public void initializeMetaData() {
+	@Override
+	public void initializeMetadata() {
 		List<Schema> schemas = new ArrayList<>();
-		metaData.setSchemas(schemas);
-		// source.add(MetaData.SCHEMAS, schemas);
+		metadata.setSchemas(schemas);
+		// source.add(metadata.SCHEMAS, schemas);
 		try (final Connection connection = getConnection()) {
-			DatabaseMetaData databaseMetaData = connection.getMetaData();
-			// String databaseProductName = databaseMetaData.getDatabaseProductName();
-			// String databaseProductVersion = databaseMetaData.getDatabaseProductVersion();
-			// String url = databaseMetaData.getURL();
-			String identifierQuoteString = databaseMetaData.getIdentifierQuoteString();
+			DatabaseMetaData databasemetadata = connection.getMetaData();
+			// String databaseProductName = databasemetadata.getDatabaseProductName();
+			// String databaseProductVersion = databasemetadata.getDatabaseProductVersion();
+			// String url = databasemetadata.getURL();
+			String identifierQuoteString = databasemetadata.getIdentifierQuoteString();
 			String defaultSchemaName = connection.getCatalog();
-			metaData.setIdentifierQuoteString(identifierQuoteString);
-			metaData.setDefaultSchemaName(defaultSchemaName);
+			metadata.setIdentifierQuoteString(identifierQuoteString);
+			metadata.setDefaultSchemaName(defaultSchemaName);
 
 			// schema metadata
-			ResultSet catalogsResultSet = databaseMetaData.getCatalogs();
+			ResultSet catalogsResultSet = databasemetadata.getCatalogs();
 			while (catalogsResultSet.next()) {
 				String schemaName = catalogsResultSet.getString(1);
 				if ("information_schema".equals(schemaName)) {
@@ -87,8 +87,8 @@ public class JdbcDataContext extends AbstractDataContext {
 			}
 
 			// table metadata
-			DefaultSchema defaultSchema = (DefaultSchema) metaData.getSchema(defaultSchemaName);
-			ResultSet tablesResultSet = databaseMetaData.getTables(defaultSchemaName, null, "%", null);
+			DefaultSchema defaultSchema = (DefaultSchema) metadata.getSchema(defaultSchemaName);
+			ResultSet tablesResultSet = databasemetadata.getTables(defaultSchemaName, null, "%", null);
 			while (tablesResultSet.next()) {
 				// String tableCatalog = tablesResultSet.getString(1);
 				// String tableSchema = tablesResultSet.getString(2);
@@ -99,7 +99,7 @@ public class JdbcDataContext extends AbstractDataContext {
 			}
 
 			// column metadata
-			ResultSet columnsResultSet = databaseMetaData.getColumns(defaultSchemaName, null, "%", null);
+			ResultSet columnsResultSet = databasemetadata.getColumns(defaultSchemaName, null, "%", null);
 			while (columnsResultSet.next()) {
 				// String columnCatalog = columnsResultSet.getString(1);
 				// String columnSchema = columnsResultSet.getString(2);
@@ -112,7 +112,7 @@ public class JdbcDataContext extends AbstractDataContext {
 				String columnRemarks = columnsResultSet.getString(12);
 				// Boolean isAutoincrement = columnsResultSet.getBoolean(23);
 
-				DefaultTable table = (DefaultTable) metaData.getTable(defaultSchemaName, columnTable);
+				DefaultTable table = (DefaultTable) metadata.getTable(defaultSchemaName, columnTable);
 				table.addColumn(new DefaultColumn(columnName, table, columnNullable, columnRemarks, columnSize));
 			}
 

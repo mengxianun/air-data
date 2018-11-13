@@ -18,7 +18,7 @@ import com.google.common.base.Strings;
  * @author mengxiangyun
  *
  */
-public class MetaData {
+public class Metadata {
 
 	// public name attributes
 	public static final String NAME = "name";
@@ -47,20 +47,20 @@ public class MetaData {
 
 	private String identifierQuoteString = "";
 
-	public MetaData() {
+	public Metadata() {
 		this.schemas = new ArrayList<>();
 	}
 
-	public MetaData(List<Schema> schemas) {
+	public Metadata(List<Schema> schemas) {
 		this.schemas = schemas;
 	}
 
-	public MetaData(List<Schema> schemas, String defaultSchemaName) {
+	public Metadata(List<Schema> schemas, String defaultSchemaName) {
 		this.schemas = schemas;
 		this.defaultSchemaName = defaultSchemaName;
 	}
 
-	public MetaData(List<Schema> schemas, String defaultSchemaName, String identifierQuoteString) {
+	public Metadata(List<Schema> schemas, String defaultSchemaName, String identifierQuoteString) {
 		this.schemas = schemas;
 		this.defaultSchemaName = defaultSchemaName;
 		this.identifierQuoteString = identifierQuoteString;

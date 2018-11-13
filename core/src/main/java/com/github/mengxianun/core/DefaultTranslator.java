@@ -4,13 +4,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 
-import com.github.mengxianun.core.exception.PreHandlerException;
-import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.mengxianun.core.attributes.ConfigAttributes;
 import com.github.mengxianun.core.exception.DataException;
+import com.github.mengxianun.core.exception.PreHandlerException;
 import com.github.mengxianun.core.item.TableItem;
 import com.github.mengxianun.core.resutset.DefaultDataResultSet;
 import com.github.mengxianun.core.resutset.FailDataResultSet;
@@ -20,19 +19,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
-public class DataTranslator extends AbstractTranslator {
+public class DefaultTranslator extends AbstractTranslator {
 
-	private static final Logger logger = LoggerFactory.getLogger(DataTranslator.class);
+	private static final Logger logger = LoggerFactory.getLogger(DefaultTranslator.class);
 
-	public DataTranslator() {
+	public DefaultTranslator() {
 		this(configuration.getAsJsonPrimitive(ConfigAttributes.CONFIG_FILE).getAsString());
 	}
 
-	public DataTranslator(String configFile) {
+	public DefaultTranslator(String configFile) {
 		readConfig(configFile);
 	}
 
-	public DataTranslator(URL configFileURL) {
+	public DefaultTranslator(URL configFileURL) {
 		readConfig(configFileURL);
 	}
 

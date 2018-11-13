@@ -10,16 +10,18 @@ import org.h2.tools.RunScript;
 import org.junit.jupiter.api.BeforeAll;
 
 import com.github.mengxianun.core.DataResultSet;
-import com.github.mengxianun.core.DataTranslator;
+import com.github.mengxianun.core.DefaultTranslator;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 public class TestSupport {
 	
 	static final Logger LOG = Logger.getLogger(TestSupport.class.getName());
 	
-	public static DataTranslator translator = new DataTranslator();
+	public static DefaultTranslator translator = new DefaultTranslator();
 	public static final String DB_DRIVER_CLASS_NAME = "org.h2.Driver";
 	public static final String DB_URL = "jdbc:h2:~/air_jdbc";
 	public static final String DB_USERNAME = "test";
@@ -75,9 +77,11 @@ public class TestSupport {
 	DataResultSet run(String jsonFile) {
 		String json = readJson(jsonFile);
 		DataResultSet dataResultSet = translator.translate(json);
-		LOG.info("Json: " + json);
-		LOG.info("Result code: " + dataResultSet.getCode());
-		LOG.info("Result message: " + dataResultSet.getMessage());
+		LOG.info("-----------------Json-----------------");
+		LOG.info(json);
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		LOG.info("-----------------Result-----------------");
+		LOG.info(gson.toJson(dataResultSet));
 		return dataResultSet;
 	}
 

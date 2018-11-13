@@ -9,11 +9,11 @@ import com.google.gson.JsonElement;
 
 public abstract class AbstractDataContext implements DataContext {
 
-	protected MetaData metaData = new MetaData();
+	protected Metadata metadata = new Metadata();
 
 	protected Dialect dialect;
 
-	protected abstract void initializeMetaData();
+	protected abstract void initializeMetadata();
 
 	@Override
 	public JsonElement executeNative(Table table, String script) {
@@ -22,42 +22,42 @@ public abstract class AbstractDataContext implements DataContext {
 
 	@Override
 	public List<Schema> getSchemas() {
-		return metaData.getSchemas();
+		return metadata.getSchemas();
 	}
 
 	@Override
 	public Schema getDefaultSchema() {
-		return metaData.getDefaultSchema();
+		return metadata.getDefaultSchema();
 	}
 
 	@Override
 	public Schema getSchema(String schemaName) {
-		return metaData.getSchema(schemaName);
+		return metadata.getSchema(schemaName);
 	}
 
 	@Override
 	public Table getTable(String tableName) {
-		return metaData.getTable(tableName);
+		return metadata.getTable(tableName);
 	}
 
 	@Override
 	public Table getTable(String schemaName, String tableName) {
-		return metaData.getTable(schemaName, tableName);
+		return metadata.getTable(schemaName, tableName);
 	}
 
 	@Override
 	public Column getColumn(String tableName, String columnName) {
-		return metaData.getColumn(tableName, columnName);
+		return metadata.getColumn(tableName, columnName);
 	}
 
 	@Override
 	public Column getColumn(String schemaName, String tableName, String columnName) {
-		return metaData.getColumn(schemaName, tableName, columnName);
+		return metadata.getColumn(schemaName, tableName, columnName);
 	}
 
 	@Override
 	public String getIdentifierQuoteString() {
-		return metaData.getIdentifierQuoteString();
+		return metadata.getIdentifierQuoteString();
 	}
 
 	public Dialect getDialect() {
