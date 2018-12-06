@@ -1,16 +1,19 @@
 package com.github.mengxianun.jdbc;
 
-import com.alibaba.druid.pool.DruidDataSource;
+import java.lang.reflect.Type;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.github.mengxianun.core.DataContextFactory;
 import com.google.auto.service.AutoService;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 @AutoService(DataContextFactory.class)
 public final class JdbcDataContextFactory implements DataContextFactory {
-
-	private static final String DB_URL = "url";
-	private static final String DB_USERNAME = "username";
-	private static final String DB_PASSWORD = "password";
 
 	@Override
 	public String getType() {
@@ -19,11 +22,15 @@ public final class JdbcDataContextFactory implements DataContextFactory {
 
 	@Override
 	public JdbcDataContext create(JsonObject dataSourceJsonObject) {
-		DruidDataSource druidDataSource = new DruidDataSource();
-		druidDataSource.setUrl(dataSourceJsonObject.getAsJsonPrimitive(DB_URL).getAsString());
-		druidDataSource.setUsername(dataSourceJsonObject.getAsJsonPrimitive(DB_USERNAME).getAsString());
-		druidDataSource.setPassword(dataSourceJsonObject.getAsJsonPrimitive(DB_PASSWORD).getAsString());
-		// 构建DataContext
+		Type type = new TypeToken<Map<String, String>>() {
+		}.getType();
+		Map<String, String> dataSourceMap = new Gson().fromJson(dataSourceJsonObject, type);
+		DataSource druidDataSource;
+		try {
+			druidDataSource = DruidDataSourceFactory.createDataSource(dataSourceMap);
+		} catch (Exception e) {
+			throw new JdbcDataException(e);
+		}
 		return new JdbcDataContext(druidDataSource);
 	}
 
