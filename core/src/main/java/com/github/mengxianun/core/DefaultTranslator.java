@@ -71,11 +71,12 @@ public class DefaultTranslator extends AbstractTranslator {
 			logger.error(e.getMessage(), e.getCause());
 			return new FailDataResultSet(e.getCode(), e.getMessage());
 		} catch (JsonSyntaxException e) {
-			logger.error(e.getMessage(), e.getCause());
+			logger.error(e.getMessage(), e);
 			return new FailDataResultSet(ResultStatus.JSON_FORMAT_ERROR);
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e.getCause());
-			return new FailDataResultSet(ResultStatus.SYSTEM_ERROR);
+			logger.error(e.getMessage(), e);
+			return new FailDataResultSet(ResultStatus.SYSTEM_ERROR.code(),
+					ResultStatus.SYSTEM_ERROR.fill(e.getMessage()).message());
 		}
 	}
 
