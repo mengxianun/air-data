@@ -33,7 +33,7 @@ public abstract class AbstractDataResultSet implements DataResultSet {
 	}
 
 	public AbstractDataResultSet(ResultStatus resultStatus) {
-		this(ResultStatus.SUCCESS.code(), ResultStatus.SUCCESS.message());
+		this(resultStatus.code(), resultStatus.message());
 	}
 
 	@Override
