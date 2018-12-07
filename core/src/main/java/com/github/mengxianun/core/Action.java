@@ -3,6 +3,7 @@ package com.github.mengxianun.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.mengxianun.core.attributes.ResultAttributes;
 import com.github.mengxianun.core.item.ColumnItem;
 import com.github.mengxianun.core.item.FilterItem;
 import com.github.mengxianun.core.item.GroupItem;
@@ -52,6 +53,13 @@ public class Action {
 		this.tableItems.add(tableItem);
 	}
 
+	public void addTableItems(List<TableItem> tableItems) {
+		if (tableItems == null || tableItems.isEmpty()) {
+			return;
+		}
+		this.tableItems.addAll(tableItems);
+	}
+
 	public void addColumnItem(ColumnItem columnItem) {
 		if (columnItem == null) {
 			return;
@@ -67,11 +75,25 @@ public class Action {
 		this.columnItems.add(columnItem);
 	}
 
+	public void addColumnItems(List<ColumnItem> columnItems) {
+		if (columnItems == null || columnItems.isEmpty()) {
+			return;
+		}
+		columnItems.forEach(this::addColumnItem);
+	}
+
 	public void addJoinItem(JoinItem joinItem) {
 		if (joinItem == null) {
 			return;
 		}
 		this.joinItems.add(joinItem);
+	}
+
+	public void addJoinItems(List<JoinItem> joinItems) {
+		if (joinItems == null || joinItems.isEmpty()) {
+			return;
+		}
+		this.joinItems.addAll(joinItems);
 	}
 
 	public void addFilterItem(FilterItem filterItem) {
@@ -81,6 +103,13 @@ public class Action {
 		this.filterItems.add(filterItem);
 	}
 
+	public void addFilterItem(List<FilterItem> filterItems) {
+		if (filterItems == null || filterItems.isEmpty()) {
+			return;
+		}
+		this.filterItems.addAll(filterItems);
+	}
+
 	public void addGroupItem(GroupItem groupItem) {
 		if (groupItem == null) {
 			return;
@@ -88,11 +117,25 @@ public class Action {
 		this.groupItems.add(groupItem);
 	}
 
+	public void addGroupItems(List<GroupItem> groupItems) {
+		if (groupItems == null || groupItems.isEmpty()) {
+			return;
+		}
+		this.groupItems.addAll(groupItems);
+	}
+
 	public void addOrderItem(OrderItem orderItem) {
 		if (orderItem == null) {
 			return;
 		}
 		this.orderItems.add(orderItem);
+	}
+
+	public void addOrderItems(List<OrderItem> orderItems) {
+		if (orderItems == null || orderItems.isEmpty()) {
+			return;
+		}
+		this.orderItems.addAll(orderItems);
 	}
 
 	public void addLimitItem(LimitItem limitItem) {
@@ -107,6 +150,13 @@ public class Action {
 			return;
 		}
 		this.valueItems.add(valueItem);
+	}
+
+	public void addValueItems(List<ValueItem> valueItems) {
+		if (valueItems == null || valueItems.isEmpty()) {
+			return;
+		}
+		this.valueItems.addAll(valueItems);
 	}
 
 	public boolean isDetail() {
@@ -131,6 +181,18 @@ public class Action {
 
 	public boolean isLimit() {
 		return limitItem != null;
+	}
+
+	public Action count() {
+		Action count = new Action();
+		count.setOperation(Operation.DETAIL);
+		count.setDataContext(dataContext);
+		count.addTableItems(tableItems);
+		count.addJoinItems(joinItems);
+		count.addFilterItem(filterItems);
+		count.addGroupItems(groupItems);
+		count.addColumnItem(new ColumnItem("count(*)", ResultAttributes.COUNT));
+		return count;
 	}
 
 	public Operation getOperation() {

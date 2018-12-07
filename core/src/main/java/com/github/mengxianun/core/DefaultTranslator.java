@@ -10,8 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.mengxianun.core.attributes.ConfigAttributes;
+import com.github.mengxianun.core.attributes.ResultAttributes;
 import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.exception.PreHandlerException;
+import com.github.mengxianun.core.item.LimitItem;
 import com.github.mengxianun.core.item.TableItem;
 import com.github.mengxianun.core.json.JsonAttributes;
 import com.github.mengxianun.core.resutset.DefaultDataResultSet;
@@ -154,6 +156,19 @@ public class DefaultTranslator extends AbstractTranslator {
 				Action action = jsonParser.getAction();
 				result = jsonParser.getDataContext().action(action);
 				result = new DataRenderer().render(result, action);
+				if (action.isLimit()) {
+					LimitItem limitItem = action.getLimitItem();
+					long start = limitItem.getStart();
+					long end = limitItem.getEnd();
+					JsonElement countElement = jsonParser.getDataContext().action(action.count());
+					long count = countElement.getAsJsonObject().get(ResultAttributes.COUNT).getAsLong();
+					JsonObject pageResult = new JsonObject();
+					pageResult.addProperty(ResultAttributes.START, start);
+					pageResult.addProperty(ResultAttributes.END, end);
+					pageResult.addProperty(ResultAttributes.TOTAL, count);
+					pageResult.add(ResultAttributes.DATA, result);
+					return pageResult;
+				}
 			}
 		} catch (DataException e) {
 			throw e;
