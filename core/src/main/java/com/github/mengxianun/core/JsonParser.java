@@ -259,7 +259,7 @@ public class JsonParser {
 		dataContext = translator.getDataContext(sourceName);
 		Table table = dataContext.getTable(tableName);
 		if (table == null) {
-			throw new DataException(String.format("table [%s] does not exist", tableName));
+			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(tableName));
 		}
 		if (Strings.isNullOrEmpty(alias)) {
 			alias = getRandomString(6) + "_" + tableName;
