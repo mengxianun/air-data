@@ -42,7 +42,7 @@ import com.google.gson.JsonObject;
  */
 public class JsonParser {
 
-	private final DefaultTranslator translator;
+	private DefaultTranslator translator;
 	private DataContext dataContext;
 	// Json 对象
 	private final JsonObject jsonData;
@@ -54,6 +54,11 @@ public class JsonParser {
 	private String nativeContent;
 	// 表关联关系, 内部 List Table 从左到右依次关联. 不包含主表
 	private List<List<Table>> tempJoins = new ArrayList<>();
+
+	public JsonParser(String json) {
+		this.jsonData = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
+		parseOperation();
+	}
 
 	public JsonParser(JsonObject jsonData, DefaultTranslator translator) {
 		this.jsonData = jsonData;
@@ -115,6 +120,34 @@ public class JsonParser {
 			throw new JsonDataException("No operations were found in the Json data.");
 		}
 
+	}
+
+	public String parseSimpleTable() {
+		JsonElement tablesElement = jsonData.get(operationAttribute);
+		if (!tablesElement.isJsonObject() && !tablesElement.isJsonArray()) {
+			String tableString = tablesElement.getAsString().trim();
+			if (tableString.contains(JsonAttributes.ALIAS_KEY)) {
+				String[] tablePart = tableString.split(JsonAttributes.ALIAS_KEY);
+				tableString = tablePart[0];
+			} else if (tableString.contains(" ")) {
+				String[] tablePart = tableString.split("\\s+");
+				if (tablePart.length == 2) {
+					String regex = "^(?![0-9]*$)[a-zA-Z0-9_$]+$";
+					if (tablePart[0].matches(regex) && tablePart[1].matches(regex)) {
+						tableString = tablePart[0];
+					}
+				}
+			}
+			String tableName;
+			if (tableString.contains(".")) {
+				String[] tableSchema = tableString.split("\\.");
+				tableName = tableSchema[1];
+			} else {
+				tableName = tableString;
+			}
+			return tableName;
+		}
+		return null;
 	}
 
 	public Action parse() {
@@ -199,8 +232,8 @@ public class JsonParser {
 	private TableItem parseTable(JsonElement tableElement) {
 		String tableString = tableElement.getAsString().trim();
 		String alias = null;
-		if (tableString.contains(JsonAttributes.COLUMN_ALIAS_KEY)) {
-			String[] tablePart = tableString.split(JsonAttributes.COLUMN_ALIAS_KEY);
+		if (tableString.contains(JsonAttributes.ALIAS_KEY)) {
+			String[] tablePart = tableString.split(JsonAttributes.ALIAS_KEY);
 			tableString = tablePart[0];
 			alias = tablePart[1];
 		} else if (tableString.contains(" ")) {
@@ -466,8 +499,8 @@ public class JsonParser {
 	private ColumnItem parseColumn(JsonElement columnElement) {
 		String columnString = columnElement.getAsString().trim();
 		String alias = null;
-		if (columnString.contains(JsonAttributes.COLUMN_ALIAS_KEY)) {
-			String[] columnPart = columnString.split(JsonAttributes.COLUMN_ALIAS_KEY);
+		if (columnString.contains(JsonAttributes.ALIAS_KEY)) {
+			String[] columnPart = columnString.split(JsonAttributes.ALIAS_KEY);
 			columnString = columnPart[0];
 			alias = columnPart[1];
 		} else if (columnString.contains(" ")) {

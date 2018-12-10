@@ -7,7 +7,7 @@ public interface JsonAttributes {
 	// 字段
 	public static final String FIELDS = "fields";
 	// 字段别名关键字
-	public static final String COLUMN_ALIAS_KEY = " as ";
+	public static final String ALIAS_KEY = " as ";
 	// 关联表
 	public static final String JOIN = "join";
 	// insert 或 update 的值
