@@ -301,7 +301,7 @@ public class JsonParser {
 		String joinTableAlias = getRandomString(6) + "_" + joinTableName;
 		Table joinTable = dataContext.getTable(joinTableName);
 		if (joinTable == null) {
-			throw new DataException(String.format("table [%s] does not exist", joinTableName));
+			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(joinTableName));
 		}
 		TableItem joinTableItem = new TableItem(joinTable, joinTableAlias);
 		return new JoinElement(joinTableItem, joinType);
