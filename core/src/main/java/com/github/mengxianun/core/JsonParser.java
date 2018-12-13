@@ -264,6 +264,10 @@ public class JsonParser {
 		if (Strings.isNullOrEmpty(alias)) {
 			alias = getRandomString(6) + "_" + tableName;
 		}
+		// DELETE 语句不指定别名
+		if (isDelete()) {
+			alias = null;
+		}
 		return new TableItem(table, alias);
 	}
 
