@@ -259,11 +259,12 @@ public class JsonParser {
 		if (table == null) {
 			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(tableName));
 		}
+		TableItem tableItem = new TableItem(table, alias);
 		// SQL 语句不指定表别名
 		if (isInsert() || isUpdate() || isDelete()) {
-			alias = null;
+			tableItem.setAlias(null);
 		}
-		return new TableItem(table, alias);
+		return tableItem;
 	}
 
 	public void parseJoins() {
