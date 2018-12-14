@@ -202,8 +202,12 @@ public class DataRenderer {
 
 	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonElement value) {
 		Column column = columnItem.getColumn();
-		String columnAlias = columnItem.getAlias();
-		String columnKey = column == null ? columnAlias : treatColumn(column.getName());
+		// 返回 key(列) 分3种情况
+		// 1. 指定了列别名的情况下, key 为指定的列别名. 例: column as alias
+		// 2. 只指定了列的情况下的情况下, key 为自动列名. 例: column
+		// 3. 列为表达式, 非具体字段, key 为自动生成的别名. 例: count(*)
+		String columnKey = !columnItem.isCustomAlias() && column != null ? treatColumn(column.getName())
+				: columnItem.getAlias();
 		if (value == null || value.isJsonNull()) {
 			record.addProperty(columnKey, (String) null);
 		} else {

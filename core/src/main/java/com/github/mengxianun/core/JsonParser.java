@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Random;
 
 import com.github.mengxianun.core.attributes.AssociationType;
 import com.github.mengxianun.core.exception.DataException;
@@ -28,7 +27,6 @@ import com.github.mengxianun.core.json.Order;
 import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Relationship;
 import com.github.mengxianun.core.schema.Table;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -261,9 +259,6 @@ public class JsonParser {
 		if (table == null) {
 			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(tableName));
 		}
-		if (Strings.isNullOrEmpty(alias)) {
-			alias = getRandomString(6) + "_" + tableName;
-		}
 		// SQL 语句不指定表别名
 		if (isInsert() || isUpdate() || isDelete()) {
 			alias = null;
@@ -302,12 +297,11 @@ public class JsonParser {
 	}
 
 	public JoinElement parseJoin(String joinTableName, JoinType joinType) {
-		String joinTableAlias = getRandomString(6) + "_" + joinTableName;
 		Table joinTable = dataContext.getTable(joinTableName);
 		if (joinTable == null) {
 			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(joinTableName));
 		}
-		TableItem joinTableItem = new TableItem(joinTable, joinTableAlias);
+		TableItem joinTableItem = new TableItem(joinTable, null);
 		return new JoinElement(joinTableItem, joinType);
 	}
 
@@ -616,8 +610,7 @@ public class JsonParser {
 	private void createMainTableItemColumns(TableItem tableItem) {
 		List<Column> columns = tableItem.getTable().getColumns();
 		for (Column column : columns) {
-			String alias = getRandomString(6);
-			action.addColumnItem(new ColumnItem(column, alias, tableItem));
+			action.addColumnItem(new ColumnItem(column, null, tableItem));
 		}
 	}
 
@@ -629,8 +622,7 @@ public class JsonParser {
 	private void createJoinTableItemColumns(TableItem tableItem) {
 		List<Column> columns = tableItem.getTable().getColumns();
 		for (Column column : columns) {
-			String alias = getRandomString(6);
-			JoinColumnItem joinColumnItem = new JoinColumnItem(column, alias, tableItem);
+			JoinColumnItem joinColumnItem = new JoinColumnItem(column, null, tableItem);
 			parseJoinColumnAssociation(joinColumnItem);
 			action.addColumnItem(joinColumnItem);
 		}
@@ -752,8 +744,7 @@ public class JsonParser {
 					TableItem primaryTableItem = getTableItem(primaryTable);
 					TableItem foreignTableItem = getTableItem(foreignTable);
 					if (foreignTableItem == null) {
-						String foreignTableAlias = getRandomString(6) + "_" + foreignTable.getName();
-						foreignTableItem = new TableItem(foreignTable, foreignTableAlias);
+						foreignTableItem = new TableItem(foreignTable, null);
 					} else {
 						continue;
 					}
@@ -1034,9 +1025,6 @@ public class JsonParser {
 		if (column == null) { // 不是列名的情况, 如函数
 			return new ColumnItem(columnString, alias);
 		} else {
-			if (Strings.isNullOrEmpty(alias)) {
-				alias = getRandomString(6);
-			}
 			TableItem tableItem = getMainTableItem(column.getTable());
 			if (tableItem != null) {
 				return new ColumnItem(column, alias, tableItem);
@@ -1203,18 +1191,6 @@ public class JsonParser {
 			return true;
 		}
 		return false;
-	}
-
-	private String getRandomString(int length) {
-		// String base = "abcdefghijklmnopqrstuvwxyz0123456789";
-		String base = "abcdefghijklmnopqrstuvwxyz";
-		Random random = new Random();
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < length; i++) {
-			int number = random.nextInt(base.length());
-			sb.append(base.charAt(number));
-		}
-		return sb.toString();
 	}
 
 	public boolean isDetail() {

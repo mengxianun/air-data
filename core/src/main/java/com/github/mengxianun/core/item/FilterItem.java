@@ -8,16 +8,14 @@ import com.github.mengxianun.core.json.Operator;
 
 public class FilterItem {
 
+	// 条件列
 	private ColumnItem columnItem;
-
+	// 条件值
 	private Object value;
-
 	// 连接符, AND/OR
 	private Connector connector;
-
 	// 运算符
 	private Operator operator;
-
 	// 子条件
 	private List<FilterItem> subFilterItems;
 
