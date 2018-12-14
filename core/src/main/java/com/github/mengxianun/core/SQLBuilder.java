@@ -387,7 +387,7 @@ public class SQLBuilder {
 			}
 			Column column = valueItem.getColumn();
 			Object value = valueItem.getValue();
-			tempColumnsBuilder.append(column.getName());
+			tempColumnsBuilder.append(quote(column.getName()));
 			tempValuesBuilder.append("?");
 			params.add(value);
 			comma = true;
@@ -415,7 +415,7 @@ public class SQLBuilder {
 			}
 			Column column = valueItem.getColumn();
 			Object value = valueItem.getValue();
-			valuesBuilder.append(column.getName()).append(" = ?");
+			valuesBuilder.append(quote(column.getName())).append(" = ?");
 			params.add(value);
 			comma = true;
 		}
