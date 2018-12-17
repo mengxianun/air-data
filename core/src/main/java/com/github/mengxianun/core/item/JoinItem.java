@@ -1,47 +1,47 @@
 package com.github.mengxianun.core.item;
 
+import java.util.List;
+
 import com.github.mengxianun.core.json.JoinType;
 
 public class JoinItem {
 
-	private ColumnItem leftColumn;
+	private List<ColumnItem> leftColumns;
 
-	private ColumnItem rightColumn;
+	private List<ColumnItem> rightColumns;
 
 	private JoinType joinType;
 
-	public JoinItem(ColumnItem leftColumn, ColumnItem rightColumn) {
-		this.leftColumn = leftColumn;
-		this.rightColumn = rightColumn;
+	public JoinItem(List<ColumnItem> leftColumns, List<ColumnItem> rightColumns) {
+		this.leftColumns = leftColumns;
+		this.rightColumns = rightColumns;
 	}
 
-	public JoinItem(ColumnItem leftColumn, ColumnItem rightColumn, JoinType joinType) {
-		this.leftColumn = leftColumn;
-		this.rightColumn = rightColumn;
+	public JoinItem(List<ColumnItem> leftColumns, List<ColumnItem> rightColumns, JoinType joinType) {
+		this.leftColumns = leftColumns;
+		this.rightColumns = rightColumns;
 		this.joinType = joinType;
 	}
 
-	public ColumnItem getLeftColumn() {
-		return leftColumn;
+	public List<ColumnItem> getLeftColumns() {
+		return leftColumns;
 	}
 
-	public void setLeftColumn(ColumnItem leftColumn) {
-		this.leftColumn = leftColumn;
+	public void setLeftColumns(List<ColumnItem> leftColumns) {
+		this.leftColumns = leftColumns;
 	}
 
-	public ColumnItem getRightColumn() {
-		return rightColumn;
+	public List<ColumnItem> getRightColumns() {
+		return rightColumns;
 	}
 
-	public void setRightColumn(ColumnItem rightColumn) {
-		this.rightColumn = rightColumn;
+	public void setRightColumns(List<ColumnItem> rightColumns) {
+		this.rightColumns = rightColumns;
 	}
-
 
 	public JoinType getJoinType() {
 		return joinType;
 	}
-
 
 	public void setJoinType(JoinType joinType) {
 		this.joinType = joinType;

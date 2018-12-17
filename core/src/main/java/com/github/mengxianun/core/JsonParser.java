@@ -323,23 +323,15 @@ public class JsonParser {
 			// 1. 主表关联 join 表 (数据表配置文件中的配置)
 			Relationship relationship = table.getRelationship(joinTable);
 			if (relationship != null) {
-				Column primaryColumn = relationship.getPrimaryColumn();
-				Column foreignColumn = relationship.getForeignColumn();
-				ColumnItem primaryColumnItem = new ColumnItem(primaryColumn, tableItem);
-				ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, joinTableItem);
-				action.addJoinItem(new JoinItem(primaryColumnItem, foreignColumnItem, joinType));
+				addJoinItem(relationship, tableItem, joinTableItem, joinType);
 				joinsInMainTable.add(joinElement);
 				tempJoins.add(Lists.newArrayList(table, joinTable));
 			} else {
 				// 2. join 表关联主表 (数据表配置文件中的配置)
 				relationship = joinTable.getRelationship(table);
 				if (relationship != null) {
-					Column primaryColumn = relationship.getPrimaryColumn();
-					Column foreignColumn = relationship.getForeignColumn();
 					// 这里主表和 join 表调换, 因为操作是以主表为主
-					ColumnItem primaryColumnItem = new ColumnItem(primaryColumn, joinTableItem);
-					ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, tableItem);
-					action.addJoinItem(new JoinItem(foreignColumnItem, primaryColumnItem, joinType));
+					addJoinItemInOpposite(relationship, tableItem, joinTableItem, joinType);
 					joinsInMainTable.add(joinElement);
 					tempJoins.add(Lists.newArrayList(table, joinTable));
 				}
@@ -373,20 +365,11 @@ public class JsonParser {
 				TableItem unknownTableItem = unknownJoinElement.getJoinTableItem();
 				Table unknownTable = unknownTableItem.getTable();
 				Relationship relationship = knownTable.getRelationship(unknownTable);
-				ColumnItem primaryColumnItem;
-				ColumnItem foreignColumnItem;
 				if (relationship != null) {
-					primaryColumnItem = new ColumnItem(relationship.getPrimaryColumn(), knownTableItem);
-					foreignColumnItem = new ColumnItem(relationship.getForeignColumn(), unknownTableItem);
-					action.addJoinItem(new JoinItem(primaryColumnItem, foreignColumnItem, joinType));
+					addJoinItem(relationship, knownTableItem, unknownTableItem, joinType);
 				} else {
 					relationship = unknownTable.getRelationship(knownTable);
-					if (relationship != null) {
-						// 这里主表和 join 表调换, 因为操作是以主表为主
-						primaryColumnItem = new ColumnItem(relationship.getPrimaryColumn(), unknownTableItem);
-						foreignColumnItem = new ColumnItem(relationship.getForeignColumn(), knownTableItem);
-						action.addJoinItem(new JoinItem(foreignColumnItem, primaryColumnItem, joinType));
-					}
+					addJoinItemInOpposite(relationship, knownTableItem, unknownTableItem, joinType);
 				}
 				if (relationship != null) {
 					findJoinElements.add(unknownJoinElement);
@@ -415,6 +398,46 @@ public class JsonParser {
 		if (!unknownJoinElements.isEmpty()) {
 			createJoin(findJoinElements, unknownJoinElements);
 		}
+	}
+
+	public void addJoinItem(Relationship relationship, TableItem primaryTableItem, TableItem foreignTableItem,
+			JoinType joinType) {
+		if (relationship == null) {
+			return;
+		}
+		List<Column> primaryColumns = relationship.getPrimaryColumns();
+		List<Column> foreignColumns = relationship.getForeignColumns();
+		List<ColumnItem> leftColumns = new ArrayList<>();
+		List<ColumnItem> rightColumns = new ArrayList<>();
+		for (int i = 0; i < primaryColumns.size(); i++) {
+			Column primaryColumn = primaryColumns.get(i);
+			Column foreignColumn = foreignColumns.get(i);
+			ColumnItem primaryColumnItem = new ColumnItem(primaryColumn, primaryTableItem);
+			ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, foreignTableItem);
+			leftColumns.add(primaryColumnItem);
+			rightColumns.add(foreignColumnItem);
+		}
+		action.addJoinItem(new JoinItem(leftColumns, rightColumns, joinType));
+	}
+
+	public void addJoinItemInOpposite(Relationship relationship, TableItem primaryTableItem, TableItem foreignTableItem,
+			JoinType joinType) {
+		if (relationship == null) {
+			return;
+		}
+		List<Column> primaryColumns = relationship.getPrimaryColumns();
+		List<Column> foreignColumns = relationship.getForeignColumns();
+		List<ColumnItem> leftColumns = new ArrayList<>();
+		List<ColumnItem> rightColumns = new ArrayList<>();
+		for (int i = 0; i < primaryColumns.size(); i++) {
+			Column primaryColumn = primaryColumns.get(i);
+			Column foreignColumn = foreignColumns.get(i);
+			ColumnItem primaryColumnItem = new ColumnItem(primaryColumn, foreignTableItem);
+			ColumnItem foreignColumnItem = new ColumnItem(foreignColumn, primaryTableItem);
+			leftColumns.add(primaryColumnItem);
+			rightColumns.add(foreignColumnItem);
+		}
+		action.addJoinItem(new JoinItem(rightColumns, leftColumns, joinType));
 	}
 
 	public class JoinElement {
@@ -575,7 +598,7 @@ public class JsonParser {
 	private void createJoinColumns() {
 		List<JoinItem> joinItems = action.getJoinItems();
 		for (JoinItem joinItem : joinItems) {
-			TableItem joinTableItem = joinItem.getRightColumn().getTableItem();
+			TableItem joinTableItem = joinItem.getRightColumns().get(0).getTableItem();
 			createJoinTableItemColumns(joinTableItem);
 		}
 	}
@@ -599,7 +622,7 @@ public class JsonParser {
 		}
 		List<JoinItem> joinItems = action.getJoinItems();
 		for (JoinItem joinItem : joinItems) {
-			TableItem joinTableItem = joinItem.getRightColumn().getTableItem();
+			TableItem joinTableItem = joinItem.getRightColumns().get(0).getTableItem();
 			Table joinTable = joinTableItem.getTable();
 			if (joinTable.getName().equals(tableName)) {
 				createJoinTableItemColumns(joinTableItem);
@@ -733,7 +756,7 @@ public class JsonParser {
 			List<TableItem> tableItems = action.getTableItems();
 			for (TableItem tableItem : tableItems) {
 				Table table = tableItem.getTable();
-				List<Relationship> relationships = table.getRelationships(column.getTable());
+				List<Relationship> relationships = table.getCrossRelationships(column.getTable());
 				if (relationships.isEmpty()) {
 					throw new JsonDataException(ResultStatus.DATASOURCE_RELATIONSHIP_NOT_FOUND.fill(table.getName()));
 				}
@@ -749,10 +772,7 @@ public class JsonParser {
 					} else {
 						continue;
 					}
-
-					ColumnItem primaryColumnItem = new ColumnItem(relationship.getPrimaryColumn(), primaryTableItem);
-					ColumnItem foreignColumnItem = new ColumnItem(relationship.getForeignColumn(), foreignTableItem);
-					action.addJoinItem(new JoinItem(primaryColumnItem, foreignColumnItem, JoinType.LEFT));
+					addJoinItem(relationship, primaryTableItem, foreignTableItem, JoinType.LEFT);
 				}
 
 			}
@@ -775,6 +795,14 @@ public class JsonParser {
 		over: while (pos < length) {
 			switch (filterString.charAt(pos++)) {
 			case '=':
+				switch (filterString.charAt(pos++)) {
+				case '=':
+					operator = Operator.STRONG_EQUAL;
+					break over;
+				default:
+					break;
+				}
+
 				String tail = filterString.substring(pos);
 				if (tail.contains(",")) { // in
 					operator = Operator.IN;
@@ -1107,8 +1135,8 @@ public class JsonParser {
 	private Column findJoinColumn(String columnString) {
 		List<JoinItem> joinItems = action.getJoinItems();
 		for (JoinItem joinItem : joinItems) {
-			List<Column> primaryTableColumns = joinItem.getLeftColumn().getTableItem().getTable().getColumns();
-			List<Column> foreignTableColumns = joinItem.getRightColumn().getTableItem().getTable().getColumns();
+			List<Column> primaryTableColumns = joinItem.getLeftColumns().get(0).getTableItem().getTable().getColumns();
+			List<Column> foreignTableColumns = joinItem.getRightColumns().get(0).getTableItem().getTable().getColumns();
 			Optional<Column> primaryColumn = primaryTableColumns.stream().filter(c -> c.getName().equals(columnString))
 					.findFirst();
 			if (primaryColumn.isPresent()) {
@@ -1158,7 +1186,7 @@ public class JsonParser {
 	private TableItem getJoinTableItem(Table table) {
 		List<JoinItem> joinItems = action.getJoinItems();
 		for (JoinItem joinItem : joinItems) {
-			TableItem tableItem = joinItem.getRightColumn().getTableItem();
+			TableItem tableItem = joinItem.getRightColumns().get(0).getTableItem();
 			Table joinTable = tableItem.getTable();
 			if (joinTable == table) {
 				return tableItem;

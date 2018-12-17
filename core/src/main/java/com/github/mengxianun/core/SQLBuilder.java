@@ -199,36 +199,44 @@ public class SQLBuilder {
 			default:
 				throw new DataException(String.format("wrong join type [%s]", joinItem.getJoinType()));
 			}
-			// join left table
-			ColumnItem leftColumnItem = joinItem.getLeftColumn();
-			TableItem leftTableItem = leftColumnItem.getTableItem();
-			Table leftTable = leftTableItem.getTable();
-			String leftTableAlias = leftTableItem.getAlias();
-			// join right table
-			ColumnItem rightColumnItem = joinItem.getRightColumn();
-			TableItem rightTableItem = rightColumnItem.getTableItem();
-			Table rightTable = rightTableItem.getTable();
-			String rightTableAlias = rightTableItem.getAlias();
 
-			joinsBuilder.append(quote(rightTable.getName()));
-			if (!Strings.isNullOrEmpty(rightTableAlias)) {
-				joinsBuilder.append(ALIAS_KEY).append(rightTableAlias);
+			List<ColumnItem> leftColumns = joinItem.getLeftColumns();
+			List<ColumnItem> rightColumns = joinItem.getRightColumns();
+			for (int i = 0; i < leftColumns.size(); i++) {
+				// join left table
+				ColumnItem leftColumnItem = leftColumns.get(i);
+				TableItem leftTableItem = leftColumnItem.getTableItem();
+				Table leftTable = leftTableItem.getTable();
+				String leftTableAlias = leftTableItem.getAlias();
+				// join right table
+				ColumnItem rightColumnItem = rightColumns.get(i);
+				TableItem rightTableItem = rightColumnItem.getTableItem();
+				Table rightTable = rightTableItem.getTable();
+				String rightTableAlias = rightTableItem.getAlias();
+				if (i == 0) {
+					joinsBuilder.append(quote(rightTable.getName()));
+					if (!Strings.isNullOrEmpty(rightTableAlias)) {
+						joinsBuilder.append(ALIAS_KEY).append(rightTableAlias);
+					}
+					joinsBuilder.append(JOIN_ON);
+				} else {
+					joinsBuilder.append(DELIM_AND);
+				}
+				if (Strings.isNullOrEmpty(leftTableAlias)) {
+					joinsBuilder.append(quote(leftTable.getName()));
+				} else {
+					joinsBuilder.append(leftTableAlias);
+				}
+				joinsBuilder.append(".").append(quote(leftColumnItem.getColumn().getName()));
+				joinsBuilder.append(" = ");
+				if (Strings.isNullOrEmpty(rightTableAlias)) {
+					joinsBuilder.append(quote(rightTable.getName()));
+				} else {
+					joinsBuilder.append(rightTableAlias);
+				}
+				joinsBuilder.append(".").append(quote(rightColumnItem.getColumn().getName()));
 			}
-			joinsBuilder.append(JOIN_ON);
 
-			if (Strings.isNullOrEmpty(leftTableAlias)) {
-				joinsBuilder.append(quote(leftTable.getName()));
-			} else {
-				joinsBuilder.append(leftTableAlias);
-			}
-			joinsBuilder.append(".").append(quote(leftColumnItem.getColumn().getName()));
-			joinsBuilder.append(" = ");
-			if (Strings.isNullOrEmpty(rightTableAlias)) {
-				joinsBuilder.append(quote(rightTable.getName()));
-			} else {
-				joinsBuilder.append(rightTableAlias);
-			}
-			joinsBuilder.append(".").append(quote(rightColumnItem.getColumn().getName()));
 		}
 		return joinsBuilder.toString();
 	}
@@ -276,6 +284,7 @@ public class SQLBuilder {
 		Operator operator = filterItem.getOperator();
 		switch (operator) {
 		case EQUAL:
+		case STRONG_EQUAL:
 		case NOT_EQUAL:
 		case LT:
 		case LTE:

@@ -22,7 +22,14 @@ public interface Table extends Name {
 	public String getRemarks();
 
 	/**
-	 * 获取配置的关联关系
+	 * 获取配置的主表直接关联的所有表关联关系
+	 * 
+	 * @return
+	 */
+	public List<Relationship> getRelationships();
+
+	/**
+	 * 获取配置的主表的直接关联的关联关系
 	 * 
 	 * @param foreignTable
 	 * @return
@@ -35,14 +42,9 @@ public interface Table extends Name {
 	 * @param foreignTable
 	 * @return
 	 */
-	public List<Relationship> getRelationships(Table foreignTable);
+	public List<Relationship> getCrossRelationships(Table foreignTable);
 
-	/**
-	 * 获取直接关联的关联关系
-	 * 
-	 * @return
-	 */
-	public List<Relationship> getRelationships();
+
 
 	/**
 	 * 获取关联关系

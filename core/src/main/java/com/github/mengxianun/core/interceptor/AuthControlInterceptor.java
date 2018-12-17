@@ -1,5 +1,9 @@
 package com.github.mengxianun.core.interceptor;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.github.mengxianun.core.JsonParser;
 import com.github.mengxianun.core.ResultStatus;
 import com.github.mengxianun.core.attributes.ConfigAttributes;
@@ -10,9 +14,6 @@ import com.github.mengxianun.core.utils.Type;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.*;
 
 public class AuthControlInterceptor implements TranslatorInterceptor {
 
@@ -58,7 +59,7 @@ public class AuthControlInterceptor implements TranslatorInterceptor {
 		// 取join表表名
 		for (JoinItem joinItem : parser.getAction().getJoinItems()) {
 			try {
-				operateTables.add(joinItem.getRightColumn().getTableItem().getTable().getName());
+				operateTables.add(joinItem.getRightColumns().get(0).getTableItem().getTable().getName());
 			} catch (Exception e) {
 			}
 		}

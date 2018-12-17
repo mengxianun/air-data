@@ -10,6 +10,8 @@ public enum Operator {
 
 	// 等于
 	EQUAL("=", "="),
+	// 等于
+	STRONG_EQUAL("==", "="),
 	// 不等于
 	NOT_EQUAL("!=", "<>"),
 	// 大于
