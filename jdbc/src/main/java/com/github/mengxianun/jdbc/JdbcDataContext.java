@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.github.mengxianun.core.AbstractDataContext;
 import com.github.mengxianun.core.Action;
 import com.github.mengxianun.core.ResultStatus;
-import com.github.mengxianun.core.SQLBuilder;
 import com.github.mengxianun.core.attributes.ResultAttributes;
 import com.github.mengxianun.core.json.JsonAttributes;
 import com.github.mengxianun.core.schema.DefaultColumn;
@@ -229,9 +228,8 @@ public class JdbcDataContext extends AbstractDataContext {
 	@Override
 	public JsonElement action(Action action) {
 		JsonElement result = null;
-		SQLBuilder sqlBuilder = new SQLBuilder(action);
-		String sql = sqlBuilder.getSql();
-		List<Object> params = sqlBuilder.getParams();
+		String sql = action.getSql();
+		List<Object> params = action.getParams();
 		try {
 			if (action.isDetail()) {
 				result = runner.query(sql, new JsonObjectHandler(convert), params.toArray());

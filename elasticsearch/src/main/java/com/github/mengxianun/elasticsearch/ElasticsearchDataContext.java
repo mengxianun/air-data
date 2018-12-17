@@ -99,4 +99,15 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 		return responseObject;
 	}
 
+	@Override
+	public void close() {
+		super.close();
+		try {
+			client.close();
+		} catch (IOException e) {
+			logger.error(ResultStatus.RESOURCE_SHUTDOWN_FAILED.fill("org.elasticsearch.client.RestClient").message(),
+					e);
+		}
+	}
+
 }

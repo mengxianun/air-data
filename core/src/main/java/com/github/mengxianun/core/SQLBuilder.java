@@ -40,7 +40,7 @@ public class SQLBuilder {
 	public static final String DELIM_COMMA = ", ";
 	public static final String DELIM_AND = " AND ";
 	public static final String DELIM_OR = " OR ";
-
+	public static final String COUNT = " COUNT(*) ";
 	public static final String COLUMN_ALL = "*";
 	// 字段别名关联字符串
 	public static final String ALIAS_KEY = " AS ";
@@ -58,14 +58,10 @@ public class SQLBuilder {
 
 	private List<Object> params = new ArrayList<>();
 
-	private List<Object> whereParams = new ArrayList<>();
-
-	private String countSql;
-
 	public SQLBuilder(Action action) {
 		this.action = action;
 		this.dataContext = action.getDataContext();
-		toSql();
+//		toSql();
 	}
 
 	public void toSql() {
@@ -361,7 +357,9 @@ public class SQLBuilder {
 			return "";
 		}
 		StringBuilder limitBuilder = new StringBuilder(PREFIX_LIMIT);
-		limitBuilder.append(limitItem.getStart()).append(", ").append(limitItem.getLimit());
+		limitBuilder.append("?, ?");
+		params.add(limitItem.getStart());
+		params.add(limitItem.getLimit());
 		return limitBuilder.toString();
 	}
 
@@ -500,6 +498,23 @@ public class SQLBuilder {
 		return element;
 	}
 
+	public String countSql() {
+		StringBuilder countBuilder = new StringBuilder();
+		// 去掉 limit 部分的SQL
+		String notLimitSql = sql.split(SQLBuilder.PREFIX_LIMIT)[0];
+		StringBuilder countSql = countBuilder.append(PREFIX_SELECT).append(COUNT).append(ALIAS_KEY).append("count")
+				.append(PREFIX_FROM)
+				.append("(")
+				.append(notLimitSql)
+				.append(")").append(ALIAS_KEY).append("original_table");
+		return countSql.toString();
+	}
+
+	public List<Object> countParams() {
+		// 去掉最后的分页参数
+		return new ArrayList<>(params).subList(0, params.size() - 2);
+	}
+
 	public String getSql() {
 		return sql;
 	}
@@ -514,18 +529,6 @@ public class SQLBuilder {
 
 	public void setParams(List<Object> params) {
 		this.params = params;
-	}
-
-	public List<Object> getWhereParams() {
-		return whereParams;
-	}
-
-	public void setWhereParams(List<Object> whereParams) {
-		this.whereParams = whereParams;
-	}
-
-	public String getCountSql() {
-		return countSql;
 	}
 
 }

@@ -33,11 +33,11 @@ public class DefaultTranslator extends AbstractTranslator {
 	}
 
 	public DefaultTranslator(String configFile) {
-		readConfig(configFile);
+		super.readConfig(configFile);
 	}
 
 	public DefaultTranslator(URL configFileURL) {
-		readConfig(configFileURL);
+		super.readConfig(configFileURL);
 	}
 
 	@Override
@@ -153,6 +153,7 @@ public class DefaultTranslator extends AbstractTranslator {
 				// to do
 			} else {
 				Action action = jsonParser.getAction();
+				action.build();
 				result = jsonParser.getDataContext().action(action);
 				result = new DataRenderer().render(result, action);
 				if (action.isLimit()) {

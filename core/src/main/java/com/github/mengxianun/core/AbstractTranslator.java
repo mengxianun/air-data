@@ -17,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
-import com.github.mengxianun.core.interceptor.TranslatorInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +24,7 @@ import com.github.mengxianun.core.attributes.ConfigAttributes;
 import com.github.mengxianun.core.attributes.DataSourceAttributes;
 import com.github.mengxianun.core.attributes.TableConfigAttributes;
 import com.github.mengxianun.core.exception.DataException;
+import com.github.mengxianun.core.interceptor.TranslatorInterceptor;
 import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Table;
 import com.google.common.base.Charsets;
@@ -268,6 +268,17 @@ public abstract class AbstractTranslator implements Translator {
 				interceptor.preHandler(parser, configuration);
 			}
 		}
+	}
+
+	protected void addShutdownHook() {
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				System.out.println("--------------Air close--------------");
+			}
+
+		}));
 	}
 
 }

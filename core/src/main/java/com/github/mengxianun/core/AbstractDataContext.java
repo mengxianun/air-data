@@ -64,4 +64,9 @@ public abstract class AbstractDataContext implements DataContext {
 		return dialect;
 	}
 
+	@Override
+	public void close() {
+		// TODO
+	}
+
 }

@@ -53,6 +53,8 @@ public enum ResultStatus {
 	TRANSLATION_FAILED(10800, "Json translation failed"),
 	// 原生语句执行失败
 	NATIVE_FAILED(10801, "Native statement execution failed"),
+	// 资源关闭失败
+	RESOURCE_SHUTDOWN_FAILED(10801, "Resource [%s] shutdown failed"),
 	
 	/*
 	 * 系统错误

@@ -35,4 +35,6 @@ public interface DataContext {
 
 	public Dialect getDialect();
 
+	public void close();
+
 }

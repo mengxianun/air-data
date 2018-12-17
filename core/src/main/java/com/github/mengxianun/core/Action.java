@@ -3,7 +3,6 @@ package com.github.mengxianun.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.mengxianun.core.attributes.ResultAttributes;
 import com.github.mengxianun.core.item.ColumnItem;
 import com.github.mengxianun.core.item.FilterItem;
 import com.github.mengxianun.core.item.GroupItem;
@@ -29,6 +28,7 @@ public class Action {
 	private LimitItem limitItem;
 	private List<ValueItem> valueItems;
 	private ResultType resultType;
+	private SQLBuilder sqlBuilder;
 
 	public Action() {
 		this.tableItems = new ArrayList<>();
@@ -187,12 +187,28 @@ public class Action {
 		Action count = new Action();
 		count.setOperation(Operation.DETAIL);
 		count.setDataContext(dataContext);
-		count.addTableItems(tableItems);
-		count.addJoinItems(joinItems);
-		count.addFilterItem(filterItems);
-		count.addGroupItems(groupItems);
-		count.addColumnItem(new ColumnItem("count(*)", ResultAttributes.COUNT));
+		count.build();
+		String countSql = sqlBuilder.countSql();
+		List<Object> countParams = sqlBuilder.countParams();
+		SQLBuilder countSqlBuilder = count.getSqlBuilder();
+		countSqlBuilder.setSql(countSql);
+		countSqlBuilder.setParams(countParams);
 		return count;
+	}
+
+	public void build() {
+		if (sqlBuilder == null) {
+			sqlBuilder = new SQLBuilder(this);
+		}
+		sqlBuilder.toSql();
+	}
+
+	public String getSql() {
+		return sqlBuilder.getSql();
+	}
+
+	public List<Object> getParams() {
+		return sqlBuilder.getParams();
 	}
 
 	public Operation getOperation() {
@@ -281,6 +297,14 @@ public class Action {
 
 	public void setResultType(ResultType resultType) {
 		this.resultType = resultType;
+	}
+
+	public SQLBuilder getSqlBuilder() {
+		return sqlBuilder;
+	}
+
+	public void setSqlBuilder(SQLBuilder sqlBuilder) {
+		this.sqlBuilder = sqlBuilder;
 	}
 
 }
