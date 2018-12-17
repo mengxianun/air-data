@@ -1,6 +1,5 @@
 package com.github.mengxianun.core;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -176,18 +175,6 @@ public class DefaultTranslator extends AbstractTranslator {
 			throw e;
 		}
 		return result;
-	}
-
-	@Override
-	public String translateToString(String json) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public InputStream translateToStream(String json) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

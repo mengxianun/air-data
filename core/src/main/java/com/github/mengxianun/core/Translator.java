@@ -1,7 +1,5 @@
 package com.github.mengxianun.core;
 
-import java.io.InputStream;
-
 /**
  * 翻译器, 将 JSON 翻译为 DATA
  * 
@@ -27,24 +25,6 @@ public interface Translator {
 	 * @return
 	 */
 	public DataResultSet translate(String json, String... filterExpressions);
-
-	/**
-	 * 将 JSON 翻译为字符串返回
-	 * 
-	 * @param json
-	 *            JSON 请求字符串
-	 * @return JSON格式的结果字符串
-	 */
-	public String translateToString(String json);
-
-	/**
-	 * 将 JSON 翻译为流返回
-	 * 
-	 * @param json
-	 *            JSON 请求字符串
-	 * @return JSON格式的结果流
-	 */
-	public InputStream translateToStream(String json);
 
 	/**
 	 * 
