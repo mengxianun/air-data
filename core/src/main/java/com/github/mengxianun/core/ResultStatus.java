@@ -54,7 +54,7 @@ public enum ResultStatus {
 	// 原生语句执行失败
 	NATIVE_FAILED(10801, "Native statement execution failed"),
 	// 资源关闭失败
-	RESOURCE_SHUTDOWN_FAILED(10801, "Resource [%s] shutdown failed"),
+	RESOURCE_DESTROY_FAILED(10801, "Resource [%s] destroy failed"),
 	
 	/*
 	 * 系统错误

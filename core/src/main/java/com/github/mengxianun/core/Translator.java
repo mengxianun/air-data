@@ -27,6 +27,7 @@ public interface Translator {
 	public DataResultSet translate(String json, String... filterExpressions);
 
 	/**
+	 * 注册 DataContext, 重新读取配置文件
 	 * 
 	 * @param name
 	 * @param dataContext

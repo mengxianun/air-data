@@ -33,11 +33,11 @@ public class DefaultTranslator extends AbstractTranslator {
 	}
 
 	public DefaultTranslator(String configFile) {
-		super.readConfig(configFile);
+		super.init(configFile);
 	}
 
 	public DefaultTranslator(URL configFileURL) {
-		super.readConfig(configFileURL);
+		super.init(configFileURL);
 	}
 
 	@Override

@@ -35,6 +35,6 @@ public interface DataContext {
 
 	public Dialect getDialect();
 
-	public void close();
+	public void destroy() throws Throwable;
 
 }

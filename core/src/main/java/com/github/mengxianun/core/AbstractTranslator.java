@@ -66,18 +66,28 @@ public abstract class AbstractTranslator implements Translator {
 		configuration.add(ConfigAttributes.AUTH_CONTROL, JsonNull.INSTANCE);
 	}
 
-	protected void readConfig(String configFile) {
+	protected void init(String configFile) {
+		init(convertToURL(configFile));
+	}
+
+	protected void init(URL configFileURL) {
+		readConfig(configFileURL);
+		readTablesConfig(configuration.getAsJsonPrimitive(ConfigAttributes.TABLE_CONFIG_PATH).getAsString());
+		addShutdownHook();
+	}
+
+	private URL convertToURL(String configFile) {
 		try {
 			URL configFileURL = Resources.getResource(configFile);
 			configuration.addProperty(ConfigAttributes.CONFIG_FILE, configFile);
-			readConfig(configFileURL);
+			return configFileURL;
 		} catch (Exception e) {
-			logger.error("config file [{}] parse error", configFile);
+			logger.error(String.format("config file [%s] parse error", configFile), e);
 		}
-		readTablesConfig(configuration.getAsJsonPrimitive(ConfigAttributes.TABLE_CONFIG_PATH).getAsString());
+		return null;
 	}
 
-	protected void readConfig(URL configFileURL) {
+	private void readConfig(URL configFileURL) {
 		try {
 			String configurationFileContent = Resources.toString(configFileURL, Charsets.UTF_8);
 			JsonObject configurationJsonObject = new JsonParser().parse(configurationFileContent).getAsJsonObject();
@@ -87,11 +97,11 @@ public abstract class AbstractTranslator implements Translator {
 			}
 			createDataContext();
 		} catch (IOException e) {
-			logger.error("config file [{}] parse error", configFileURL);
+			logger.error(String.format("config file [%s] parse error", configFileURL), e);
 		}
 	}
 
-	protected void createDataContext() {
+	private void createDataContext() {
 		discoverFromClasspath();
 
 		JsonObject dataSourcesJsonObject = configuration.getAsJsonObject(ConfigAttributes.DATASOURCES);
@@ -109,7 +119,7 @@ public abstract class AbstractTranslator implements Translator {
 				if (dataContextFactory.getType().equals(type)) {
 					dataSourceJsonObject.remove(ConfigAttributes.DATASOURCE_TYPE);
 					DataContext dataContext = dataContextFactory.create(dataSourceJsonObject);
-					registerDataContext(dataSourceName, dataContext);
+					addDataContext(dataSourceName, dataContext);
 					break;
 				}
 			}
@@ -151,7 +161,7 @@ public abstract class AbstractTranslator implements Translator {
 	 * 
 	 * @param tablesConfigPath
 	 */
-	protected void readTablesConfig(String tablesConfigPath) {
+	private void readTablesConfig(String tablesConfigPath) {
 		URL tablesConfigURL = Thread.currentThread().getContextClassLoader().getResource(tablesConfigPath);
 		File tablesConfigFile;
 		try {
@@ -219,8 +229,7 @@ public abstract class AbstractTranslator implements Translator {
 		}
 	}
 
-	@Override
-	public void registerDataContext(String name, DataContext dataContext) {
+	public void addDataContext(String name, DataContext dataContext) {
 		if (dataContexts.containsKey(name)) {
 			throw new DataException(String.format("DataContext [%s] already exists", name));
 		}
@@ -230,7 +239,12 @@ public abstract class AbstractTranslator implements Translator {
 			String defaultDataSourceName = dataContexts.keySet().iterator().next();
 			configuration.addProperty(ConfigAttributes.DEFAULT_DATASOURCE, defaultDataSourceName);
 		}
-		readConfig(configuration.getAsJsonPrimitive(ConfigAttributes.CONFIG_FILE).getAsString());
+	}
+
+	@Override
+	public void registerDataContext(String name, DataContext dataContext) {
+		addDataContext(name, dataContext);
+		init(configuration.getAsJsonPrimitive(ConfigAttributes.CONFIG_FILE).getAsString());
 	}
 
 	public void discoverFromClasspath() {
@@ -270,12 +284,25 @@ public abstract class AbstractTranslator implements Translator {
 		}
 	}
 
+	/**
+	 * 添加 JVM 关闭钩子, 在 JVM 关闭时释放资源
+	 */
 	protected void addShutdownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
 			@Override
 			public void run() {
-				System.out.println("--------------Air close--------------");
+				logger.info("Close Air DataContext");
+				for (String dataContextName : dataContexts.keySet()) {
+					DataContext dataContext = dataContexts.get(dataContextName);
+					try {
+						dataContext.destroy();
+						logger.info("DataContext [{}] destroyed", dataContextName);
+					} catch (Throwable e) {
+						logger.error(String.format("DataContext [%s] destroy failed", dataContextName), e);
+					}
+
+				}
 			}
 
 		}));
