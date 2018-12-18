@@ -71,7 +71,9 @@ public abstract class AbstractTranslator implements Translator {
 	}
 
 	protected void init(URL configFileURL) {
-		readConfig(configFileURL);
+		if (configFileURL != null) {
+			readConfig(configFileURL);
+		}
 		readTablesConfig(configuration.getAsJsonPrimitive(ConfigAttributes.TABLE_CONFIG_PATH).getAsString());
 		addShutdownHook();
 	}

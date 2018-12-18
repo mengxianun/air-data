@@ -133,7 +133,9 @@ public class DefaultTranslator extends AbstractTranslator {
 				for (int i = 0; i < transactionArray.size(); i++) {
 					JsonObject innerJsonData = transactionArray.get(i).getAsJsonObject();
 					JsonParser innerJsonParser = new JsonParser(innerJsonData, this);
-					Action action = innerJsonParser.parse();
+					innerJsonParser.parse();
+					Action action = innerJsonParser.getAction();
+					action.build();
 					actions.add(action);
 					// 将第一个Json操作的数据源作为整个事务数据源. 暂时不支持跨数据源事务
 					if (i == 0) {
@@ -161,7 +163,10 @@ public class DefaultTranslator extends AbstractTranslator {
 					long start = limitItem.getStart();
 					long end = limitItem.getEnd();
 					JsonElement countElement = jsonParser.getDataContext().action(action.count());
-					long count = countElement.getAsJsonObject().get(ResultAttributes.COUNT).getAsLong();
+					JsonObject countObject = countElement.getAsJsonObject();
+					String countKey = countObject.has(ResultAttributes.COUNT) ? ResultAttributes.COUNT
+							: ResultAttributes.COUNT.toUpperCase();
+					long count = countObject.get(countKey).getAsLong();
 					JsonObject pageResult = new JsonObject();
 					pageResult.addProperty(ResultAttributes.START, start);
 					pageResult.addProperty(ResultAttributes.END, end);

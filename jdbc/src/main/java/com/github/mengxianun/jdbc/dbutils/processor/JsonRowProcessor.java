@@ -10,7 +10,7 @@ import com.google.gson.JsonObject;
 public class JsonRowProcessor {
 
 	/**
-	 * 将行数据转换为 Json 对象, 列名转为小写
+	 * 将行数据转换为 Json 对象
 	 * 
 	 * @param rs
 	 * @return

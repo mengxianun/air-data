@@ -22,7 +22,7 @@ public class FilterTest extends TestSupport {
 
 	@Test
 	void testFilterRelation() {
-		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "filter_table_relation.json", "filter_table_3.id=1");
+		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "filter_table_relation.json", "filter_table_2.id=1");
 		JsonArray result = (JsonArray) dataResultSet.getJsonData();
 		assertEquals(result.size(), 1);
 	}

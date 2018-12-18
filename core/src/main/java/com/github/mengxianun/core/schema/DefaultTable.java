@@ -174,9 +174,6 @@ public class DefaultTable implements Table {
 		List<Relationship> relationships = new ArrayList<>();
 		// 从数据表配置中查找关联
 		if (config.has(TableConfigAttributes.COLUMNS)) {
-			List<Column> primaryColumns = new ArrayList<>();
-			List<Column> foreignColumns = new ArrayList<>();
-			AssociationType associationType = null;
 			JsonObject columnsConfig = config.getAsJsonObject(TableConfigAttributes.COLUMNS);
 			for (String columnName : columnsConfig.keySet()) {
 				JsonObject columnConfig = columnsConfig.getAsJsonObject(columnName);
@@ -185,32 +182,12 @@ public class DefaultTable implements Table {
 							.getAsJsonObject(TableConfigAttributes.COLUMN_ASSOCIATION);
 					String targetTableName = associationConfig
 							.getAsJsonPrimitive(TableConfigAttributes.ASSOCIATION_TARGET_TABLE).getAsString();
-					String targetColumnName = associationConfig
-							.getAsJsonPrimitive(TableConfigAttributes.ASSOCIATION_TARGET_COLUMN).getAsString();
-					if (associationConfig.has(TableConfigAttributes.ASSOCIATION_TYPE)) {
-						String associationTypeString = associationConfig
-								.getAsJsonPrimitive(TableConfigAttributes.ASSOCIATION_TYPE).getAsString();
-						associationType = AssociationType.from(associationTypeString);
-					} else {
-						associationType = AssociationType.ONE_TO_ONE;
-					}
 					if (foreignTable.getName().equalsIgnoreCase(targetTableName)) {
-						Column primaryColumn = getColumnByName(columnName);
-						Column foreignColumn = foreignTable.getColumnByName(targetColumnName);
-						// DefaultRelationship relationship = new DefaultRelationship(primaryColumn,
-						// foreignColumn,
-						// associationType);
-						// relationships.add(relationship);
-						primaryColumns.add(primaryColumn);
-						foreignColumns.add(foreignColumn);
+						relationships.add(getRelationship(foreignTable));
 						break;
 					} else {
-						Column primaryColumn = getColumnByName(columnName);
 						Table targetTable = schema.getTableByName(targetTableName);
-						Column foreignColumn = targetTable.getColumnByName(targetColumnName);
-						DefaultRelationship relationship = new DefaultRelationship(primaryColumn, foreignColumn,
-								associationType);
-						relationships.add(relationship);
+						relationships.add(getRelationship(targetTable));
 						List<Relationship> innerRelationships = targetTable.getCrossRelationships(foreignTable);
 						relationships.addAll(innerRelationships);
 						if (!innerRelationships.isEmpty()) {

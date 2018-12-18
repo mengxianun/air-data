@@ -16,7 +16,7 @@ public class TransactionTest extends TestSupport {
 
 	@Test
 	void testTransaction12() {
-		run(JSON_PARENT_PATH + "transaction12.json");
+		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "transaction12.json");
 		// DataResultSet dataResultSet = run(JSON_PARENT_PATH + "transaction12.json");
 		// JsonArray transactionResult = (JsonArray) dataResultSet.getJsonData();
 		// assertEquals(transactionResult.size(), 2);

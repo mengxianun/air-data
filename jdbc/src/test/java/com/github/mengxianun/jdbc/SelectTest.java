@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.github.mengxianun.core.DataResultSet;
+import com.github.mengxianun.core.attributes.ResultAttributes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -150,12 +151,16 @@ public class SelectTest extends TestSupport {
 	@Test
 	void testLimit() {
 		DataResultSet dataResultSet = run(JSON_PARENT_PATH + "select_limit.json");
-		JsonArray result = (JsonArray) dataResultSet.getJsonData();
-		assertEquals(result.size(), 2);
-		JsonObject firstElement = result.get(0).getAsJsonObject();
+		JsonObject result = (JsonObject) dataResultSet.getJsonData();
+		assertTrue(result.has(ResultAttributes.TOTAL));
+		long total = result.get(ResultAttributes.TOTAL).getAsLong();
+		assertEquals(total, 6);
+		JsonArray data = result.get(ResultAttributes.DATA).getAsJsonArray();
+		assertEquals(data.size(), 2);
+		JsonObject firstElement = data.get(0).getAsJsonObject();
 		String firstElementName = firstElement.get("name").getAsString();
 		assertEquals(firstElementName, "bcd");
-		JsonObject lastElement = result.get(result.size() - 1).getAsJsonObject();
+		JsonObject lastElement = data.get(data.size() - 1).getAsJsonObject();
 		String lastElementName = lastElement.get("name").getAsString();
 		assertEquals(lastElementName, "cde");
 	}
