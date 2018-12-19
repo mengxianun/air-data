@@ -9,6 +9,7 @@ import com.github.mengxianun.core.item.JoinColumnItem;
 import com.github.mengxianun.core.item.JoinItem;
 import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Table;
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -134,7 +135,8 @@ public class DataRenderer {
 				Column column = columnItem.getColumn();
 				String columnKey = action.columnAliasEnabled() ? columnItem.getAlias() : column.getName();
 				// String columnAlias = columnItem.getAlias();
-				Object value = getValue(record, columnKey);
+				String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
+				Object value = getValue(record, recordKey);
 				if (value != null) {
 					uniqueKey.append(value.toString());
 				}
@@ -193,7 +195,8 @@ public class DataRenderer {
 
 	public String getKey(ColumnItem columnItem, Action action) {
 		Column column = columnItem.getColumn();
-		String columnKey = action.columnAliasEnabled() ? columnItem.getAlias() : treatColumn(column.getName());
+		String columnKey = action.columnAliasEnabled() && columnItem.isCustomAlias() ? columnItem.getAlias()
+				: treatColumn(column.getName());
 		return columnKey;
 	}
 
@@ -211,7 +214,8 @@ public class DataRenderer {
 
 	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonObject originalData, Action action) {
 		String columnKey = getKey(columnItem, action);
-		JsonElement value = getValue(originalData, columnKey);
+		String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
+		JsonElement value = getValue(originalData, recordKey);
 		Column column = columnItem.getColumn();
 		// 返回 key(列) 分3种情况
 		// 1. 指定了列别名的情况下, key 为指定的列别名. 例: column as alias
