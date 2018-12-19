@@ -14,8 +14,10 @@ import org.elasticsearch.client.RestClient;
 import com.alibaba.druid.pool.ElasticSearchDruidDataSourceFactory;
 import com.github.mengxianun.core.DataContextFactory;
 import com.github.mengxianun.elasticsearch.attributes.ElasticsearchDatasourceAttributes;
+import com.google.auto.service.AutoService;
 import com.google.gson.JsonObject;
 
+@AutoService(DataContextFactory.class)
 public class ElasticsearchDataContextFactory implements DataContextFactory {
 
 	@Override

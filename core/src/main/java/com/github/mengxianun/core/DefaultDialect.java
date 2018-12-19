@@ -17,4 +17,14 @@ public class DefaultDialect implements Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean tableAliasEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean columnAliasEnabled() {
+		return true;
+	}
+
 }

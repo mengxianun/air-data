@@ -11,14 +11,4 @@ public class MySQLDialect implements Dialect {
 		return "mysql";
 	}
 
-	@Override
-	public boolean assignDatabase() {
-		return true;
-	}
-
-	@Override
-	public boolean quoteTable() {
-		return true;
-	}
-
 }

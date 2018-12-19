@@ -1,8 +1,10 @@
 package com.github.mengxianun.core;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.mengxianun.core.exception.DataException;
 import com.github.mengxianun.core.item.ColumnItem;
 import com.github.mengxianun.core.item.FilterItem;
 import com.github.mengxianun.core.item.GroupItem;
@@ -183,6 +185,10 @@ public class Action {
 		return limitItem != null;
 	}
 
+	public boolean columnAliasEnabled() {
+		return dataContext.getDialect().columnAliasEnabled();
+	}
+
 	public Action count() {
 		Action count = new Action();
 		count.setOperation(Operation.DETAIL);
@@ -198,7 +204,13 @@ public class Action {
 
 	public void build() {
 		if (sqlBuilder == null) {
-			sqlBuilder = new SQLBuilder(this);
+			Class<? extends SQLBuilder> sqlBuilderClass = dataContext.getDialect().getSQLBuilder();
+			try {
+				Constructor<? extends SQLBuilder> constructor = sqlBuilderClass.getConstructor(Action.class);
+				sqlBuilder = constructor.newInstance(this);
+			} catch (Exception e) {
+				throw new DataException(e);
+			}
 		}
 		sqlBuilder.toSql();
 	}

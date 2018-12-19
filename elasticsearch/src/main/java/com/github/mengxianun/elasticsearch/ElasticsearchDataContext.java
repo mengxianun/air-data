@@ -17,13 +17,13 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.mengxianun.core.DefaultDialect;
 import com.github.mengxianun.core.ResultStatus;
 import com.github.mengxianun.core.schema.DefaultColumn;
 import com.github.mengxianun.core.schema.DefaultSchema;
 import com.github.mengxianun.core.schema.DefaultTable;
 import com.github.mengxianun.core.schema.Schema;
 import com.github.mengxianun.core.schema.Table;
+import com.github.mengxianun.elasticsearch.dialect.ElasticsearchDialect;
 import com.github.mengxianun.elasticsearch.processor.ElasticsearchRowProcessor;
 import com.github.mengxianun.jdbc.JdbcDataContext;
 import com.google.gson.JsonElement;
@@ -43,7 +43,7 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 			throw new IllegalArgumentException("DataSource and RestClient cannot be null");
 		}
 		this.dataSource = dataSource;
-		this.dialect = new DefaultDialect();
+		this.dialect = new ElasticsearchDialect();
 		this.runner = new QueryRunner(dataSource);
 		this.convert = new ElasticsearchRowProcessor();
 		closeConnection.set(true);
@@ -76,9 +76,10 @@ public class ElasticsearchDataContext extends JdbcDataContext {
 				continue;
 			}
 			String type = mappings.keySet().iterator().next();
-			JsonObject properties = mappings.getAsJsonObject(type);
-			for (String columnName : properties.keySet()) {
-				DefaultColumn column = new DefaultColumn(columnName);
+			JsonObject typeObject = mappings.getAsJsonObject(type);
+			JsonObject columns = typeObject.getAsJsonObject("properties");
+			for (String columnName : columns.keySet()) {
+				DefaultColumn column = new DefaultColumn(columnName, table);
 				table.addColumn(column);
 			}
 		}

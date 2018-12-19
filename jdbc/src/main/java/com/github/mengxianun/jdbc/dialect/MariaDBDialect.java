@@ -11,14 +11,4 @@ public class MariaDBDialect implements Dialect {
 		return "mariadb";
 	}
 
-	@Override
-	public boolean assignDatabase() {
-		return true;
-	}
-
-	@Override
-	public boolean quoteTable() {
-		return true;
-	}
-
 }

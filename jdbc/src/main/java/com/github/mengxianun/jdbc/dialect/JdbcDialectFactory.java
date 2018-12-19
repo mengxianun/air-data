@@ -43,7 +43,7 @@ public class JdbcDialectFactory extends DialectFactory {
 	 * @return 方言实例
 	 */
 	public static Dialect getDialect(String url) {
-		for (Entry<String, Class<? extends Dialect>> entry : dialectMap.entrySet()) {
+		for (Entry<String, Class<? extends Dialect>> entry : dialects.entrySet()) {
 			String dbName = entry.getKey();
 			if (url.indexOf(dbName) != -1) {
 				try {

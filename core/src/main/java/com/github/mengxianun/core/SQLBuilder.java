@@ -51,16 +51,15 @@ public class SQLBuilder {
 	public static final String PREFIX_DELETE_FROM = "DELETE FROM ";
 
 	private Action action;
-
 	private DataContext dataContext;
-
-	private String sql;
-
-	private List<Object> params = new ArrayList<>();
+	private Dialect dialect;
+	protected String sql;
+	protected List<Object> params = new ArrayList<>();
 
 	public SQLBuilder(Action action) {
 		this.action = action;
 		this.dataContext = action.getDataContext();
+		this.dialect = dataContext.getDialect();
 //		toSql();
 	}
 
@@ -121,9 +120,9 @@ public class SQLBuilder {
 				if (comma) {
 					columnsBuilder.append(", ");
 				}
-				columnsBuilder.append(splicaColumn(columnItem));
+				columnsBuilder.append(spliceColumn(columnItem));
 				String alias = columnItem.getAlias();
-				if (!Strings.isNullOrEmpty(alias)) {
+				if (!Strings.isNullOrEmpty(alias) && dialect.columnAliasEnabled()) {
 					columnsBuilder.append(ALIAS_KEY).append(alias);
 				}
 				comma = true;
@@ -167,7 +166,7 @@ public class SQLBuilder {
 				tablesBuilder.append(tableItem.getExpression());
 			}
 			String alias = tableItem.getAlias();
-			if (!Strings.isNullOrEmpty(alias)) {
+			if (!Strings.isNullOrEmpty(alias) && dialect.tableAliasEnabled()) {
 				tablesBuilder.append(ALIAS_KEY).append(alias);
 			}
 			comma = true;
@@ -215,24 +214,24 @@ public class SQLBuilder {
 				String rightTableAlias = rightTableItem.getAlias();
 				if (i == 0) {
 					joinsBuilder.append(quote(rightTable.getName()));
-					if (!Strings.isNullOrEmpty(rightTableAlias)) {
+					if (!Strings.isNullOrEmpty(rightTableAlias) && dialect.tableAliasEnabled()) {
 						joinsBuilder.append(ALIAS_KEY).append(rightTableAlias);
 					}
 					joinsBuilder.append(JOIN_ON);
 				} else {
 					joinsBuilder.append(DELIM_AND);
 				}
-				if (Strings.isNullOrEmpty(leftTableAlias)) {
-					joinsBuilder.append(quote(leftTable.getName()));
-				} else {
+				if (!Strings.isNullOrEmpty(leftTableAlias) && dialect.tableAliasEnabled()) {
 					joinsBuilder.append(leftTableAlias);
+				} else {
+					joinsBuilder.append(quote(leftTable.getName()));
 				}
 				joinsBuilder.append(".").append(quote(leftColumnItem.getColumn().getName()));
 				joinsBuilder.append(" = ");
-				if (Strings.isNullOrEmpty(rightTableAlias)) {
-					joinsBuilder.append(quote(rightTable.getName()));
-				} else {
+				if (!Strings.isNullOrEmpty(rightTableAlias) && dialect.tableAliasEnabled()) {
 					joinsBuilder.append(rightTableAlias);
+				} else {
+					joinsBuilder.append(quote(rightTable.getName()));
 				}
 				joinsBuilder.append(".").append(quote(rightColumnItem.getColumn().getName()));
 			}
@@ -278,7 +277,7 @@ public class SQLBuilder {
 			return filterBuilder.toString();
 		}
 		ColumnItem columnItem = filterItem.getColumnItem();
-		filterBuilder.append(splicaColumn(columnItem));
+		filterBuilder.append(spliceColumn(columnItem));
 		filterBuilder.append(" ");
 		Object value = filterItem.getValue();
 		Operator operator = filterItem.getOperator();
@@ -326,7 +325,7 @@ public class SQLBuilder {
 				groupsBuilder.append(", ");
 			}
 			ColumnItem columnItem = groupItem.getColumnItem();
-			groupsBuilder.append(splicaColumn(columnItem));
+			groupsBuilder.append(spliceColumn(columnItem));
 			comma = true;
 		}
 		return groupsBuilder.toString();
@@ -344,7 +343,7 @@ public class SQLBuilder {
 				ordersBuilder.append(", ");
 			}
 			ColumnItem columnItem = orderItem.getColumnItem();
-			ordersBuilder.append(splicaColumn(columnItem));
+			ordersBuilder.append(spliceColumn(columnItem));
 
 			switch (orderItem.getOrder()) {
 			case DESC:
@@ -453,7 +452,7 @@ public class SQLBuilder {
 		Table table = tableItem.getTable();
 		tableBuilder.append(spliceTable(table));
 		String alias = tableItem.getAlias();
-		if (!Strings.isNullOrEmpty(alias)) {
+		if (!Strings.isNullOrEmpty(alias) && dialect.tableAliasEnabled()) {
 			tableBuilder.append(ALIAS_KEY).append(alias);
 		}
 		return tableBuilder.toString();
@@ -461,7 +460,6 @@ public class SQLBuilder {
 
 	public String spliceTable(Table table) {
 		StringBuilder tableBuilder = new StringBuilder();
-		Dialect dialect = dataContext.getDialect();
 		if (dialect.assignDatabase()) {
 			Schema schema = table.getSchema();
 			tableBuilder.append(schema.getName()).append(".");
@@ -476,20 +474,23 @@ public class SQLBuilder {
 	 * @param columnItem
 	 * @return
 	 */
-	public String splicaColumn(ColumnItem columnItem) {
+	public String spliceColumn(ColumnItem columnItem) {
 		StringBuilder columnBuilder = new StringBuilder();
 		Column column = columnItem.getColumn();
 		if (column == null) {
 			columnBuilder.append(columnItem.getExpression());
 		} else {
-			TableItem tableItem = columnItem.getTableItem();
-			String tableAlias = tableItem.getAlias();
-			if (!Strings.isNullOrEmpty(tableAlias)) {
-				columnBuilder.append(tableAlias);
-			} else {
-				columnBuilder.append(tableItem.getTable().getName());
+			if (dialect.tableAliasEnabled()) {
+				TableItem tableItem = columnItem.getTableItem();
+				String tableAlias = tableItem.getAlias();
+				if (!Strings.isNullOrEmpty(tableAlias)) {
+					columnBuilder.append(tableAlias);
+				} else {
+					columnBuilder.append(tableItem.getTable().getName());
+				}
+				columnBuilder.append(".");
 			}
-			columnBuilder.append(".").append(quote(column.getName()));
+			columnBuilder.append(quote(column.getName()));
 		}
 		return columnBuilder.toString();
 	}
@@ -501,7 +502,7 @@ public class SQLBuilder {
 	 * @return
 	 */
 	public String quote(String element) {
-		if (dataContext.getDialect().quoteTable()) {
+		if (dialect.quoteTable()) {
 			return dataContext.getIdentifierQuoteString() + element + dataContext.getIdentifierQuoteString();
 		}
 		return element;

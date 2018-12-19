@@ -48,7 +48,7 @@ public class DataRenderer {
 			// 主表的唯一记录对象
 			JsonObject uniqueRecord;
 			// 主表的唯一记录标识
-			String uniqueRecordKey = createUniqueRecordKey(record, action);
+			String uniqueRecordKey = createMainTableUniqueRecordKey(record, action);
 			if (uniqueRecords.has(uniqueRecordKey)) {
 				uniqueRecord = uniqueRecords.getAsJsonObject(uniqueRecordKey);
 			} else {
@@ -69,7 +69,7 @@ public class DataRenderer {
 						Table joinTable = joinColumnItem.getTableItem().getTable();
 						if (existJoinTables.has(joinTable.getName())) {
 							JsonObject joinTableObject = existJoinTables.getAsJsonObject(joinTable.getName());
-							addColumnValue(joinTableObject, columnItem, getValue(record, columnItem.getAlias()));
+							addColumnValue(joinTableObject, columnItem, record, action);
 							continue;
 						}
 						List<Table> parentTables = joinColumnItem.getParentTables();
@@ -99,15 +99,15 @@ public class DataRenderer {
 						// 记录出现过的 join 表
 						existJoinTables.add(joinTable.getName(), currentTableObject);
 
-						addColumnValue(currentTableObject, columnItem, getValue(record, columnItem.getAlias()));
+						addColumnValue(currentTableObject, columnItem, record, action);
 					} else {
-						addColumnValue(currentTableObject, columnItem, getValue(record, columnItem.getAlias()));
+						addColumnValue(currentTableObject, columnItem, record, action);
 					}
 				}
 			} else {
 				List<ColumnItem> columnItems = action.getColumnItems();
 				for (ColumnItem columnItem : columnItems) {
-					addColumnValue(uniqueRecord, columnItem, getValue(record, columnItem.getAlias()));
+					addColumnValue(uniqueRecord, columnItem, record, action);
 				}
 			}
 		}
@@ -126,15 +126,18 @@ public class DataRenderer {
 	 * @param action
 	 * @return
 	 */
-	public String createUniqueRecordKey(JsonObject record, Action action) {
+	public String createMainTableUniqueRecordKey(JsonObject record, Action action) {
 		StringBuilder uniqueKey = new StringBuilder();
 		List<ColumnItem> columnItems = action.getColumnItems();
 		for (ColumnItem columnItem : columnItems) {
 			if (!(columnItem instanceof JoinColumnItem)) { // 主表列
-				// Column column = columnItem.getColumn();
-				String columnAlias = columnItem.getAlias();
-				Object value = getValue(record, columnAlias);
-				uniqueKey.append(value.toString());
+				Column column = columnItem.getColumn();
+				String columnKey = action.columnAliasEnabled() ? columnItem.getAlias() : column.getName();
+				// String columnAlias = columnItem.getAlias();
+				Object value = getValue(record, columnKey);
+				if (value != null) {
+					uniqueKey.append(value.toString());
+				}
 			}
 		}
 		return uniqueKey.toString();
@@ -156,7 +159,7 @@ public class DataRenderer {
 					Table joinTable = joinColumnItem.getTableItem().getTable();
 					if (existJoinTables.has(joinTable.getName())) {
 						JsonObject joinTableObject = existJoinTables.getAsJsonObject(joinTable.getName());
-						addColumnValue(joinTableObject, columnItem, getValue(data, columnItem.getAlias()));
+						addColumnValue(joinTableObject, columnItem, data, action);
 						continue;
 					}
 					List<Table> parentTables = joinColumnItem.getParentTables();
@@ -172,9 +175,9 @@ public class DataRenderer {
 					// 记录出现过的 join 表
 					existJoinTables.add(joinTable.getName(), currentTableObject);
 
-					addColumnValue(currentTableObject, columnItem, getValue(data, columnItem.getAlias()));
+					addColumnValue(currentTableObject, columnItem, data, action);
 				} else {
-					addColumnValue(jsonData, columnItem, getValue(data, columnItem.getAlias()));
+					addColumnValue(jsonData, columnItem, data, action);
 				}
 			}
 			return jsonData;
@@ -183,9 +186,15 @@ public class DataRenderer {
 		if (columnItems.isEmpty()) {
 			return new Gson().toJsonTree(data);
 		} else {
-			columnItems.forEach(e -> addColumnValue(jsonData, e, getValue(data, e.getAlias())));
+			columnItems.forEach(e -> addColumnValue(jsonData, e, data, action));
 		}
 		return jsonData;
+	}
+
+	public String getKey(ColumnItem columnItem, Action action) {
+		Column column = columnItem.getColumn();
+		String columnKey = action.columnAliasEnabled() ? columnItem.getAlias() : treatColumn(column.getName());
+		return columnKey;
 	}
 
 	public JsonElement getValue(JsonObject record, String columnLabel) {
@@ -200,14 +209,14 @@ public class DataRenderer {
 		return value;
 	}
 
-	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonElement value) {
+	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonObject originalData, Action action) {
+		String columnKey = getKey(columnItem, action);
+		JsonElement value = getValue(originalData, columnKey);
 		Column column = columnItem.getColumn();
 		// 返回 key(列) 分3种情况
 		// 1. 指定了列别名的情况下, key 为指定的列别名. 例: column as alias
 		// 2. 只指定了列的情况下的情况下, key 为自动列名. 例: column
 		// 3. 列为表达式, 非具体字段, key 为自动生成的别名. 例: count(*)
-		String columnKey = !columnItem.isCustomAlias() && column != null ? treatColumn(column.getName())
-				: columnItem.getAlias();
 		if (value == null || value.isJsonNull()) {
 			record.addProperty(columnKey, (String) null);
 		} else {
@@ -260,8 +269,7 @@ public class DataRenderer {
 	}
 
 	public JsonObject createJoinStructure(JsonObject currentTableObject, Table parentTable, Table joinTable) {
-		return createJoinStructure(currentTableObject, joinTable.getName(),
-				parentTable.getAssociationType(joinTable));
+		return createJoinStructure(currentTableObject, joinTable.getName(), parentTable.getAssociationType(joinTable));
 	}
 
 	public JsonObject createJoinStructure(JsonObject currentTableObject, String tableName,
