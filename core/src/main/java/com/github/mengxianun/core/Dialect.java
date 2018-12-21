@@ -44,4 +44,13 @@ public interface Dialect {
 		return true;
 	}
 
+	/**
+	 * 在表或列未指定别名的情况下, 是否生成随机别名
+	 * 
+	 * @return
+	 */
+	default boolean randomAliasEnabled() {
+		return true;
+	}
+
 }

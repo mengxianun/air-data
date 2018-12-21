@@ -277,7 +277,7 @@ public class SQLBuilder {
 			return filterBuilder.toString();
 		}
 		ColumnItem columnItem = filterItem.getColumnItem();
-		filterBuilder.append(spliceCondColumn(columnItem));
+		filterBuilder.append(action.isSelect() ? spliceCondColumn(columnItem) : spliceColumn(columnItem));
 		filterBuilder.append(" ");
 		Object value = filterItem.getValue();
 		Operator operator = filterItem.getOperator();
@@ -325,7 +325,7 @@ public class SQLBuilder {
 				groupsBuilder.append(", ");
 			}
 			ColumnItem columnItem = groupItem.getColumnItem();
-			groupsBuilder.append(spliceCondColumn(columnItem));
+			groupsBuilder.append(spliceColumn(columnItem));
 			comma = true;
 		}
 		return groupsBuilder.toString();
@@ -343,7 +343,7 @@ public class SQLBuilder {
 				ordersBuilder.append(", ");
 			}
 			ColumnItem columnItem = orderItem.getColumnItem();
-			ordersBuilder.append(spliceCondColumn(columnItem));
+			ordersBuilder.append(spliceColumn(columnItem));
 
 			switch (orderItem.getOrder()) {
 			case DESC:

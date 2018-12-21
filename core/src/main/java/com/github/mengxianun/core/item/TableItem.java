@@ -1,7 +1,6 @@
 package com.github.mengxianun.core.item;
 
 import com.github.mengxianun.core.schema.Table;
-import com.google.common.base.Strings;
 
 public class TableItem extends Item {
 
@@ -18,28 +17,20 @@ public class TableItem extends Item {
 		this.table = table;
 	}
 
-	public TableItem(Table table, String alias) {
+	public TableItem(Table table, String alias, boolean customAlias) {
 		this.table = table;
-		if (Strings.isNullOrEmpty(alias)) {
-			this.alias = getRandomAlias() + "_" + table.getName();
-		} else {
-			this.alias = alias;
-			this.customAlias = true;
-		}
+		this.alias = alias;
+		this.customAlias = customAlias;
 	}
 
 	public TableItem(String expression) {
 		this.expression = expression;
 	}
 
-	public TableItem(String expression, String alias) {
+	public TableItem(String expression, String alias, boolean customAlias) {
 		this.expression = expression;
-		if (Strings.isNullOrEmpty(alias)) {
-			this.alias = getRandomAlias() + "_" + table.getName();
-		} else {
-			this.alias = alias;
-			this.customAlias = true;
-		}
+		this.alias = alias;
+		this.customAlias = customAlias;
 	}
 
 	public Table getTable() {

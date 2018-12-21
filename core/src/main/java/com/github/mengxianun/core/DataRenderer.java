@@ -133,9 +133,10 @@ public class DataRenderer {
 		for (ColumnItem columnItem : columnItems) {
 			if (!(columnItem instanceof JoinColumnItem)) { // 主表列
 				Column column = columnItem.getColumn();
-				String columnKey = action.columnAliasEnabled() ? columnItem.getAlias() : column.getName();
-				// String columnAlias = columnItem.getAlias();
-				String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
+				String columnAlias = columnItem.getAlias();
+				boolean hasAlias = !Strings.isNullOrEmpty(columnAlias);
+				String columnKey = action.columnAliasEnabled() && hasAlias ? columnAlias : column.getName();
+				String recordKey = hasAlias ? columnAlias : columnKey;
 				Object value = getValue(record, recordKey);
 				if (value != null) {
 					uniqueKey.append(value.toString());

@@ -17,24 +17,24 @@ public class JoinColumnItem extends ColumnItem {
 		super(column);
 	}
 
-	public JoinColumnItem(Column column, String alias) {
-		super(column, alias);
+	public JoinColumnItem(Column column, String alias, boolean customAlias) {
+		super(column, alias, customAlias);
 	}
 
 	public JoinColumnItem(Column column, TableItem tableItem) {
 		super(column, tableItem);
 	}
 
-	public JoinColumnItem(Column column, String alias, TableItem tableItem) {
-		super(column, alias, tableItem);
+	public JoinColumnItem(Column column, String alias, boolean customAlias, TableItem tableItem) {
+		super(column, alias, customAlias, tableItem);
 	}
 
 	public JoinColumnItem(String expression) {
 		super(expression);
 	}
 
-	public JoinColumnItem(String expression, String alias) {
-		super(expression, alias);
+	public JoinColumnItem(String expression, String alias, boolean customAlias) {
+		super(expression, alias, customAlias);
 	}
 
 	public void addParentTable(Table parentTable) {

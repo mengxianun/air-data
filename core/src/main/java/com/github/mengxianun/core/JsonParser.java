@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Random;
 
 import com.github.mengxianun.core.attributes.AssociationType;
 import com.github.mengxianun.core.exception.DataException;
@@ -27,6 +28,7 @@ import com.github.mengxianun.core.json.Order;
 import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Relationship;
 import com.github.mengxianun.core.schema.Table;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -259,7 +261,13 @@ public class JsonParser {
 		if (table == null) {
 			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(tableName));
 		}
-		TableItem tableItem = new TableItem(table, alias);
+		boolean customAlias = false;
+		if (Strings.isNullOrEmpty(alias)) {
+			alias = getTableAlias(table);
+		} else {
+			customAlias = true;
+		}
+		TableItem tableItem = new TableItem(table, alias, customAlias);
 		// SQL 语句不指定表别名
 		if (isInsert() || isUpdate() || isDelete()) {
 			tableItem.setAlias(null);
@@ -302,7 +310,7 @@ public class JsonParser {
 		if (joinTable == null) {
 			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(joinTableName));
 		}
-		TableItem joinTableItem = new TableItem(joinTable, null);
+		TableItem joinTableItem = new TableItem(joinTable, getTableAlias(joinTable), false);
 		return new JoinElement(joinTableItem, joinType);
 	}
 
@@ -634,7 +642,7 @@ public class JsonParser {
 	private void createMainTableItemColumns(TableItem tableItem) {
 		List<Column> columns = tableItem.getTable().getColumns();
 		for (Column column : columns) {
-			action.addColumnItem(new ColumnItem(column, null, tableItem));
+			action.addColumnItem(new ColumnItem(column, null, false, tableItem));
 		}
 	}
 
@@ -646,7 +654,7 @@ public class JsonParser {
 	private void createJoinTableItemColumns(TableItem tableItem) {
 		List<Column> columns = tableItem.getTable().getColumns();
 		for (Column column : columns) {
-			JoinColumnItem joinColumnItem = new JoinColumnItem(column, null, tableItem);
+			JoinColumnItem joinColumnItem = new JoinColumnItem(column, null, false, tableItem);
 			parseJoinColumnAssociation(joinColumnItem);
 			action.addColumnItem(joinColumnItem);
 		}
@@ -768,7 +776,7 @@ public class JsonParser {
 					TableItem primaryTableItem = getTableItem(primaryTable);
 					TableItem foreignTableItem = getTableItem(foreignTable);
 					if (foreignTableItem == null) {
-						foreignTableItem = new TableItem(foreignTable, null);
+						foreignTableItem = new TableItem(foreignTable, getTableAlias(foreignTable), false);
 					} else {
 						continue;
 					}
@@ -777,6 +785,8 @@ public class JsonParser {
 
 			}
 			columnItem = findColumnItem(columnString);
+			// 新的 join 表的条件列取消别名
+			columnItem.setAlias(null);
 		}
 		FilterItem filterItem = new FilterItem(columnItem, value, Connector.AND, operator);
 		action.addFilterItem(filterItem);
@@ -1050,17 +1060,23 @@ public class JsonParser {
 	 * @return
 	 */
 	private ColumnItem createColumnItem(String columnString, String alias) {
+		boolean customAlias = false;
+		if (Strings.isNullOrEmpty(alias)) {
+			alias = getColumnAlias(null);
+		} else {
+			customAlias = true;
+		}
 		Column column = findColumn(columnString);
 		if (column == null) { // 不是列名的情况, 如函数
-			return new ColumnItem(columnString, alias);
+			return new ColumnItem(columnString, alias, customAlias);
 		} else {
 			TableItem tableItem = getMainTableItem(column.getTable());
 			if (tableItem != null) {
-				return new ColumnItem(column, alias, tableItem);
+				return new ColumnItem(column, alias, customAlias, tableItem);
 			} else {
 				tableItem = getJoinTableItem(column.getTable());
 				if (tableItem != null) {
-					JoinColumnItem joinColumnItem = new JoinColumnItem(column, alias, tableItem);
+					JoinColumnItem joinColumnItem = new JoinColumnItem(column, alias, customAlias, tableItem);
 					parseJoinColumnAssociation(joinColumnItem);
 					return joinColumnItem;
 				}
@@ -1202,12 +1218,14 @@ public class JsonParser {
 	 * @return
 	 */
 	private ColumnItem findColumnItem(String columnString) {
+		Column findColumn = findColumn(columnString);
 		// 根据列别名查找
 		List<ColumnItem> columnItems = action.getColumnItems();
 		for (ColumnItem columnItem : columnItems) {
 			Column column = columnItem.getColumn();
 			String columnName = column == null ? "" : column.getName();
-			if (columnString.equals(columnItem.getAlias()) || columnString.equals(columnName)) {
+			if (columnString.equals(columnItem.getAlias()) || columnString.equalsIgnoreCase(columnName)
+					|| (column == findColumn)) {
 				return columnItem;
 			}
 		}
@@ -1239,6 +1257,38 @@ public class JsonParser {
 			return true;
 		}
 		return false;
+	}
+
+	private String getTableAlias(Table table) {
+		Dialect dialect = dataContext.getDialect();
+		if (dialect.tableAliasEnabled() && dialect.randomAliasEnabled()) {
+			return getRandomAlias() + "_" + table.getName();
+		}
+		return null;
+	}
+
+	private String getColumnAlias(Column column) {
+		Dialect dialect = dataContext.getDialect();
+		if (dialect.columnAliasEnabled() && dialect.randomAliasEnabled()) {
+			return getRandomAlias();
+		}
+		return null;
+	}
+
+	private String getRandomAlias() {
+		return getRandomString(6);
+	}
+
+	private String getRandomString(int length) {
+		// String base = "abcdefghijklmnopqrstuvwxyz0123456789";
+		String base = "abcdefghijklmnopqrstuvwxyz";
+		Random random = new Random();
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < length; i++) {
+			int number = random.nextInt(base.length());
+			sb.append(base.charAt(number));
+		}
+		return sb.toString();
 	}
 
 	public boolean isDetail() {

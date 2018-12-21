@@ -1,7 +1,6 @@
 package com.github.mengxianun.core.item;
 
 import com.github.mengxianun.core.schema.Column;
-import com.google.common.base.Strings;
 
 public class ColumnItem extends Item {
 
@@ -20,14 +19,10 @@ public class ColumnItem extends Item {
 		this.column = column;
 	}
 
-	public ColumnItem(Column column, String alias) {
+	public ColumnItem(Column column, String alias, boolean customAlias) {
 		this.column = column;
-		if (Strings.isNullOrEmpty(alias)) {
-			this.alias = getRandomAlias();
-		} else {
-			this.alias = alias;
-			this.customAlias = true;
-		}
+		this.alias = alias;
+		this.customAlias = customAlias;
 	}
 
 	public ColumnItem(Column column, TableItem tableItem) {
@@ -35,8 +30,8 @@ public class ColumnItem extends Item {
 		this.tableItem = tableItem;
 	}
 
-	public ColumnItem(Column column, String alias, TableItem tableItem) {
-		this(column, alias);
+	public ColumnItem(Column column, String alias, boolean customAlias, TableItem tableItem) {
+		this(column, alias, customAlias);
 		this.tableItem = tableItem;
 	}
 
@@ -44,14 +39,10 @@ public class ColumnItem extends Item {
 		this.expression = expression;
 	}
 
-	public ColumnItem(String expression, String alias) {
+	public ColumnItem(String expression, String alias, boolean customAlias) {
 		this.expression = expression;
-		if (Strings.isNullOrEmpty(alias)) {
-			this.alias = getRandomAlias();
-		} else {
-			this.alias = alias;
-			this.customAlias = true;
-		}
+		this.alias = alias;
+		this.customAlias = customAlias;
 	}
 
 	public Column getColumn() {

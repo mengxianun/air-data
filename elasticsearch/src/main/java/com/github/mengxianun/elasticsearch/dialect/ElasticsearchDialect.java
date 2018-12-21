@@ -38,4 +38,9 @@ public class ElasticsearchDialect implements Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean randomAliasEnabled() {
+		return false;
+	}
+
 }
