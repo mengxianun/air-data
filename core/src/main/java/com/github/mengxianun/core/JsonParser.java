@@ -740,7 +740,7 @@ public class JsonParser {
 		String columnString = cond.getColumn();
 		Object value = cond.getValue();
 
-		ColumnItem columnItem = createColumnItem(columnString);
+		ColumnItem columnItem = findColumnItem(columnString);
 		return new FilterItem(columnItem, value, Connector.AND, operator);
 	}
 	
@@ -750,7 +750,7 @@ public class JsonParser {
 		String columnString = cond.getColumn();
 		Object value = cond.getValue();
 
-		ColumnItem columnItem = createColumnItem(columnString);
+		ColumnItem columnItem = findColumnItem(columnString);
 		if (columnItem == null) { // 不属于主表, 也不属于 join 表
 			Column column = findColumn(columnString);
 			List<TableItem> tableItems = action.getTableItems();
@@ -776,7 +776,7 @@ public class JsonParser {
 				}
 
 			}
-			columnItem = createColumnItem(columnString);
+			columnItem = findColumnItem(columnString);
 		}
 		FilterItem filterItem = new FilterItem(columnItem, value, Connector.AND, operator);
 		action.addFilterItem(filterItem);
@@ -954,7 +954,7 @@ public class JsonParser {
 	 * @return
 	 */
 	public GroupItem parseGroup(String groupString) {
-		ColumnItem columnItem = createColumnItem(groupString);
+		ColumnItem columnItem = findColumnItem(groupString);
 		return new GroupItem(columnItem);
 	}
 
@@ -998,7 +998,7 @@ public class JsonParser {
 			columnString = orderString;
 			order = Order.ASC;
 		}
-		ColumnItem columnItem = createColumnItem(columnString);
+		ColumnItem columnItem = findColumnItem(columnString);
 		return new OrderItem(columnItem, order);
 	}
 
@@ -1193,6 +1193,25 @@ public class JsonParser {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * 根据列别名或列名在已经解析过的列数据中查找 ColumnItem, 如果没有就新创建一个 ColumnItem
+	 * 
+	 * @param columnString
+	 * @return
+	 */
+	private ColumnItem findColumnItem(String columnString) {
+		// 根据列别名查找
+		List<ColumnItem> columnItems = action.getColumnItems();
+		for (ColumnItem columnItem : columnItems) {
+			Column column = columnItem.getColumn();
+			String columnName = column == null ? "" : column.getName();
+			if (columnString.equals(columnItem.getAlias()) || columnString.equals(columnName)) {
+				return columnItem;
+			}
+		}
+		return createColumnItem(columnString);
 	}
 
 	public void parseNative() {

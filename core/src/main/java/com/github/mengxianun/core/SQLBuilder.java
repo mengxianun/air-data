@@ -277,7 +277,7 @@ public class SQLBuilder {
 			return filterBuilder.toString();
 		}
 		ColumnItem columnItem = filterItem.getColumnItem();
-		filterBuilder.append(spliceColumn(columnItem));
+		filterBuilder.append(spliceCondColumn(columnItem));
 		filterBuilder.append(" ");
 		Object value = filterItem.getValue();
 		Operator operator = filterItem.getOperator();
@@ -325,7 +325,7 @@ public class SQLBuilder {
 				groupsBuilder.append(", ");
 			}
 			ColumnItem columnItem = groupItem.getColumnItem();
-			groupsBuilder.append(spliceColumn(columnItem));
+			groupsBuilder.append(spliceCondColumn(columnItem));
 			comma = true;
 		}
 		return groupsBuilder.toString();
@@ -343,7 +343,7 @@ public class SQLBuilder {
 				ordersBuilder.append(", ");
 			}
 			ColumnItem columnItem = orderItem.getColumnItem();
-			ordersBuilder.append(spliceColumn(columnItem));
+			ordersBuilder.append(spliceCondColumn(columnItem));
 
 			switch (orderItem.getOrder()) {
 			case DESC:
@@ -469,7 +469,7 @@ public class SQLBuilder {
 	}
 
 	/**
-	 * 拼接列, 在所属表指定了别名的情况下, 以表别名作为前缀, 否则以表名作为前缀
+	 * 拼接列 在启动了表别名的而情况下, 如果所属表指定了别名, 以表别名作为前缀, 否则以表名作为前缀. 如果没有启动表别名, 不添加前缀
 	 * 
 	 * @param columnItem
 	 * @return
@@ -491,6 +491,38 @@ public class SQLBuilder {
 				columnBuilder.append(".");
 			}
 			columnBuilder.append(quote(column.getName()));
+		}
+		return columnBuilder.toString();
+	}
+
+	/**
+	 * <span>拼接 GROUP/WHERE/ORDER 列</span>
+	 * 在启动了表别名的而情况下, 如果所属表指定了别名, 以表别名作为前缀, 否则以表名作为前缀. 如果没有启动表别名, 不添加前缀
+	 * 
+	 * @param columnItem
+	 * @return
+	 */
+	public String spliceCondColumn(ColumnItem columnItem) {
+		StringBuilder columnBuilder = new StringBuilder();
+		Column column = columnItem.getColumn();
+		if (column == null) {
+			columnBuilder.append(columnItem.getExpression());
+		} else {
+			if (dialect.tableAliasEnabled()) {
+				TableItem tableItem = columnItem.getTableItem();
+				String tableAlias = tableItem.getAlias();
+				if (!Strings.isNullOrEmpty(tableAlias)) {
+					columnBuilder.append(tableAlias);
+				} else {
+					columnBuilder.append(tableItem.getTable().getName());
+				}
+				columnBuilder.append(".");
+			}
+			if (dialect.columnAliasEnabled() && !Strings.isNullOrEmpty(columnItem.getAlias())) {
+				columnBuilder.append(columnItem.getAlias());
+			} else {
+				columnBuilder.append(quote(column.getName()));
+			}
 		}
 		return columnBuilder.toString();
 	}
