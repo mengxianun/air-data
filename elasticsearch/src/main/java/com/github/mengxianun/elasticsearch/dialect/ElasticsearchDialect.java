@@ -35,7 +35,7 @@ public class ElasticsearchDialect implements Dialect {
 
 	@Override
 	public boolean columnAliasEnabled() {
-		return false;
+		return true;
 	}
 
 }
