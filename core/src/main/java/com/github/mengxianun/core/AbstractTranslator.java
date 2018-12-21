@@ -29,6 +29,7 @@ import com.github.mengxianun.core.schema.Column;
 import com.github.mengxianun.core.schema.Table;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
@@ -270,6 +271,22 @@ public abstract class AbstractTranslator implements Translator {
 
 	public String getDefaultDataSource() {
 		return configuration.getAsJsonPrimitive(ConfigAttributes.DEFAULT_DATASOURCE).getAsString();
+	}
+
+	@Override
+	public List<String> getDataSourceNames() {
+		return Lists.newArrayList(dataContexts.keySet());
+	}
+
+	@Override
+	public String getDataSourceName(String type) {
+		for (String sourceName : dataContexts.keySet()) {
+			DataContext dataContext = dataContexts.get(sourceName);
+			if (dataContext.getDialect().getType().equals(type)) {
+				return sourceName;
+			}
+		}
+		return null;
 	}
 
 	/**

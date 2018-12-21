@@ -1,5 +1,7 @@
 package com.github.mengxianun.core;
 
+import java.util.List;
+
 /**
  * 翻译器, 将 JSON 翻译为 DATA
  * 
@@ -33,5 +35,21 @@ public interface Translator {
 	 * @param dataContext
 	 */
 	public void registerDataContext(String name, DataContext dataContext);
+
+	/**
+	 * 获取所有配置的数据源名称
+	 * 
+	 * @return
+	 */
+	public List<String> getDataSourceNames();
+
+	/**
+	 * 获取指定类型的数据源名称
+	 * 
+	 * @param type
+	 *            数据源类型. 例: mysql, elasticsearch
+	 * @return
+	 */
+	public String getDataSourceName(String type);
 
 }
