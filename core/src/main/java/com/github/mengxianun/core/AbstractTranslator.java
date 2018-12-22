@@ -309,14 +309,14 @@ public abstract class AbstractTranslator implements Translator {
 	 */
 	@PreDestroy
 	public void cleanup() {
-		logger.info(">>>>>>>>>>>>>>>>>>>>Close Air DataContext<<<<<<<<<<<<<<<<<<<<");
+		logger.info("Close Air DataContext");
 		for (String dataContextName : dataContexts.keySet()) {
 			DataContext dataContext = dataContexts.get(dataContextName);
 			try {
 				dataContext.destroy();
-				logger.info(">>>>>>>>>>>>>>>>>>>>DataContext [{}] destroyed", dataContextName);
+				logger.info("DataContext [{}] destroyed", dataContextName);
 			} catch (Throwable e) {
-				logger.error(String.format(">>>>>>>>>>>>>>>>>>>>DataContext [%s] destroy failed", dataContextName), e);
+				logger.error(String.format("DataContext [%s] destroy failed", dataContextName), e);
 			}
 
 		}
