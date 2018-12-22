@@ -17,6 +17,8 @@ import java.util.Map.Entry;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
+import javax.annotation.PreDestroy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +78,6 @@ public abstract class AbstractTranslator implements Translator {
 			readConfig(configFileURL);
 		}
 		readTablesConfig(configuration.getAsJsonPrimitive(ConfigAttributes.TABLE_CONFIG_PATH).getAsString());
-		addShutdownHook();
 	}
 
 	private URL convertToURL(String configFile) {
@@ -304,27 +305,21 @@ public abstract class AbstractTranslator implements Translator {
 	}
 
 	/**
-	 * 添加 JVM 关闭钩子, 在 JVM 关闭时释放资源
+	 * 释放资源
 	 */
-	protected void addShutdownHook() {
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				logger.info("Close Air DataContext");
-				for (String dataContextName : dataContexts.keySet()) {
-					DataContext dataContext = dataContexts.get(dataContextName);
-					try {
-						dataContext.destroy();
-						logger.info("DataContext [{}] destroyed", dataContextName);
-					} catch (Throwable e) {
-						logger.error(String.format("DataContext [%s] destroy failed", dataContextName), e);
-					}
-
-				}
+	@PreDestroy
+	public void cleanup() {
+		logger.info(">>>>>>>>>>>>>>>>>>>>Close Air DataContext<<<<<<<<<<<<<<<<<<<<");
+		for (String dataContextName : dataContexts.keySet()) {
+			DataContext dataContext = dataContexts.get(dataContextName);
+			try {
+				dataContext.destroy();
+				logger.info(">>>>>>>>>>>>>>>>>>>>DataContext [{}] destroyed", dataContextName);
+			} catch (Throwable e) {
+				logger.error(String.format(">>>>>>>>>>>>>>>>>>>>DataContext [%s] destroy failed", dataContextName), e);
 			}
 
-		}));
+		}
 	}
 
 }
