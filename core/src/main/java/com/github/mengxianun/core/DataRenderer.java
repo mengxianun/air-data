@@ -133,9 +133,13 @@ public class DataRenderer {
 		for (ColumnItem columnItem : columnItems) {
 			if (!(columnItem instanceof JoinColumnItem)) { // 主表列
 				Column column = columnItem.getColumn();
+				// 列名
+				String columnName = column == null ? columnItem.getExpression() : column.getName();
 				String columnAlias = columnItem.getAlias();
 				boolean hasAlias = !Strings.isNullOrEmpty(columnAlias);
-				String columnKey = action.columnAliasEnabled() && hasAlias ? columnAlias : column.getName();
+				// 请求列的名称
+				String columnKey = action.columnAliasEnabled() && hasAlias ? columnAlias : columnName;
+				// 返回结果列的名称
 				String recordKey = hasAlias ? columnAlias : columnKey;
 				Object value = getValue(record, recordKey);
 				if (value != null) {
@@ -194,13 +198,30 @@ public class DataRenderer {
 		return jsonData;
 	}
 
+	/**
+	 * 数据渲染后的 key
+	 * 
+	 * @param columnItem
+	 * @param action
+	 * @return
+	 */
 	public String getKey(ColumnItem columnItem, Action action) {
 		Column column = columnItem.getColumn();
+		// 列名, 在列存在的情况下, 以列名表示, 否则按请求中列的原始内容表示
+		String columnName = column == null ? columnItem.getExpression() : column.getName();
+		// 如果请求中指定了列别名, 则返回结果的 key 为指定的列别名, 否则 key 为列名
 		String columnKey = action.columnAliasEnabled() && columnItem.isCustomAlias() ? columnItem.getAlias()
-				: treatColumn(column.getName());
+				: treatColumn(columnName);
 		return columnKey;
 	}
 
+	/**
+	 * 数据渲染后的 value
+	 * 
+	 * @param record
+	 * @param columnLabel
+	 * @return
+	 */
 	public JsonElement getValue(JsonObject record, String columnLabel) {
 		JsonElement value = null;
 		if (record.has(columnLabel)) {

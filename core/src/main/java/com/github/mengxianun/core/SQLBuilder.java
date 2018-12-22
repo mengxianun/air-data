@@ -277,7 +277,9 @@ public class SQLBuilder {
 			return filterBuilder.toString();
 		}
 		ColumnItem columnItem = filterItem.getColumnItem();
-		filterBuilder.append(action.isSelect() ? spliceCondColumn(columnItem) : spliceColumn(columnItem));
+		// filterBuilder.append(action.isSelect() ? spliceCondColumn(columnItem) :
+		// spliceColumn(columnItem));
+		filterBuilder.append(spliceColumn(columnItem));
 		filterBuilder.append(" ");
 		Object value = filterItem.getValue();
 		Operator operator = filterItem.getOperator();

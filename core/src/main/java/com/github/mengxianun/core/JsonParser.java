@@ -642,7 +642,7 @@ public class JsonParser {
 	private void createMainTableItemColumns(TableItem tableItem) {
 		List<Column> columns = tableItem.getTable().getColumns();
 		for (Column column : columns) {
-			action.addColumnItem(new ColumnItem(column, null, false, tableItem));
+			action.addColumnItem(new ColumnItem(column, getColumnAlias(column), false, tableItem));
 		}
 	}
 
@@ -654,7 +654,7 @@ public class JsonParser {
 	private void createJoinTableItemColumns(TableItem tableItem) {
 		List<Column> columns = tableItem.getTable().getColumns();
 		for (Column column : columns) {
-			JoinColumnItem joinColumnItem = new JoinColumnItem(column, null, false, tableItem);
+			JoinColumnItem joinColumnItem = new JoinColumnItem(column, getColumnAlias(column), false, tableItem);
 			parseJoinColumnAssociation(joinColumnItem);
 			action.addColumnItem(joinColumnItem);
 		}
@@ -1225,7 +1225,7 @@ public class JsonParser {
 			Column column = columnItem.getColumn();
 			String columnName = column == null ? "" : column.getName();
 			if (columnString.equals(columnItem.getAlias()) || columnString.equalsIgnoreCase(columnName)
-					|| (column == findColumn)) {
+					|| (column != null && column == findColumn)) {
 				return columnItem;
 			}
 		}
