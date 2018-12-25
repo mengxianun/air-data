@@ -55,6 +55,10 @@ public class SQLBuilder {
 	private Dialect dialect;
 	protected String sql;
 	protected List<Object> params = new ArrayList<>();
+	// 关联分页查询的情况, SQL 语句构建做特殊处理
+	protected boolean joinLimit;
+	protected List<FilterItem> joinLimitFilterItems = new ArrayList<>();
+	protected String limitString;
 
 	public SQLBuilder(Action action) {
 		this.action = action;
@@ -156,9 +160,10 @@ public class SQLBuilder {
 					tablesBuilder.append("(").append(PREFIX_SELECT).append("*").append(PREFIX_FROM)
 							.append(table.getName()).append(mainTableWhereString).append(toLimit())
 							.append(")");
-					// 删除已经在主表中用到的元素
-					action.getFilterItems().removeAll(mainTableFilterItems);
-					action.setLimitItem(null);
+					// 关联分页查询
+					joinLimit = true;
+					joinLimitFilterItems = new ArrayList<>(action.getFilterItems());
+					joinLimitFilterItems.removeAll(mainTableFilterItems);
 				} else {
 					tablesBuilder.append(spliceTable(table));
 				}
@@ -241,7 +246,7 @@ public class SQLBuilder {
 	}
 
 	public String toWhere() {
-		return toWhere(action.getFilterItems());
+		return joinLimit ? toWhere(joinLimitFilterItems) : toWhere(action.getFilterItems());
 	}
 
 	public String toWhere(List<FilterItem> filterItems) {
@@ -362,6 +367,9 @@ public class SQLBuilder {
 	}
 
 	public String toLimit() {
+		if (joinLimit) {
+			return "";
+		}
 		LimitItem limitItem = action.getLimitItem();
 		if (limitItem == null) {
 			return "";
@@ -370,7 +378,7 @@ public class SQLBuilder {
 		limitBuilder.append("?, ?");
 		params.add(limitItem.getStart());
 		params.add(limitItem.getLimit());
-		return limitBuilder.toString();
+		return limitString = limitBuilder.toString();
 	}
 
 	public String toInsertTable() {
@@ -545,7 +553,7 @@ public class SQLBuilder {
 	public String countSql() {
 		StringBuilder countBuilder = new StringBuilder();
 		// 去掉 limit 部分的SQL
-		String notLimitSql = sql.split(SQLBuilder.PREFIX_LIMIT)[0];
+		String notLimitSql = sql.replace(Strings.nullToEmpty(limitString), "");
 		StringBuilder countSql = countBuilder.append(PREFIX_SELECT).append(COUNT).append(ALIAS_KEY).append("count")
 				.append(PREFIX_FROM)
 				.append("(")
