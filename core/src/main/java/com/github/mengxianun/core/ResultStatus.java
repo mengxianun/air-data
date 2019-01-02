@@ -28,7 +28,7 @@ public enum ResultStatus {
 	// 列不存在
 	DATASOURCE_COLUMN_NOT_EXIST(10203, "Column [%s] do not exist"),
 	// SQL 执行失败
-	DATASOURCE_SQL_FAILED(10204, "SQL statement execution failed. SQL: %s"),
+	DATASOURCE_SQL_FAILED(10204, "SQL statement execution failed. %s"),
 	// 关联关系不存在
 	DATASOURCE_RELATIONSHIP_NOT_FOUND(10205, "The association relation of [%s] table is not found"),
 	// 其他操作异常
