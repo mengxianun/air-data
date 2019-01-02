@@ -2,6 +2,7 @@ package com.github.mengxianun.core;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import com.github.mengxianun.core.attributes.AssociationType;
 import com.github.mengxianun.core.item.ColumnItem;
@@ -128,6 +129,10 @@ public class DataRenderer {
 	 * @return
 	 */
 	public String createMainTableUniqueRecordKey(JsonObject record, Action action) {
+		// 单表查询的情况, 每条记录为一条唯一的记录, 所以这里生成了一个唯一ID用于标识每条记录, 以保证唯一
+		if (!action.isJoin()) {
+			return UUID.randomUUID().toString();
+		}
 		StringBuilder uniqueKey = new StringBuilder();
 		List<ColumnItem> columnItems = action.getColumnItems();
 		for (ColumnItem columnItem : columnItems) {
@@ -141,7 +146,7 @@ public class DataRenderer {
 				String columnKey = action.columnAliasEnabled() && hasAlias ? columnAlias : columnName;
 				// 返回结果列的名称
 				String recordKey = hasAlias ? columnAlias : columnKey;
-				Object value = getValue(record, recordKey);
+				Object value = getValue(record, recordKey, columnName);
 				if (value != null) {
 					uniqueKey.append(value.toString());
 				}
@@ -199,30 +204,13 @@ public class DataRenderer {
 	}
 
 	/**
-	 * 数据渲染后的 key
-	 * 
-	 * @param columnItem
-	 * @param action
-	 * @return
-	 */
-	public String getKey(ColumnItem columnItem, Action action) {
-		Column column = columnItem.getColumn();
-		// 列名, 在列存在的情况下, 以列名表示, 否则按请求中列的原始内容表示
-		String columnName = column == null ? columnItem.getExpression() : column.getName();
-		// 如果请求中指定了列别名, 则返回结果的 key 为指定的列别名, 否则 key 为列名
-		String columnKey = action.columnAliasEnabled() && columnItem.isCustomAlias() ? columnItem.getAlias()
-				: treatColumn(columnName);
-		return columnKey;
-	}
-
-	/**
 	 * 数据渲染后的 value
 	 * 
 	 * @param record
 	 * @param columnLabel
 	 * @return
 	 */
-	public JsonElement getValue(JsonObject record, String columnLabel) {
+	public JsonElement getValue(JsonObject record, String columnLabel, String columnName) {
 		JsonElement value = null;
 		if (record.has(columnLabel)) {
 			value = record.get(columnLabel);
@@ -230,15 +218,21 @@ public class DataRenderer {
 			value = record.get(columnLabel.toUpperCase());
 		} else if (record.has(columnLabel.toLowerCase())) {
 			value = record.get(columnLabel.toLowerCase());
+		} else if (record.has(columnName)) {
+			value = record.get(columnName);
 		}
 		return value;
 	}
 
 	public void addColumnValue(JsonObject record, ColumnItem columnItem, JsonObject originalData, Action action) {
-		String columnKey = getKey(columnItem, action);
-		String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
-		JsonElement value = getValue(originalData, recordKey);
 		Column column = columnItem.getColumn();
+		// 列名, 在列存在的情况下, 以列名表示, 否则按请求中列的原始内容表示
+		String columnName = column == null ? columnItem.getExpression() : column.getName();
+		// 如果请求中指定了列别名, 则返回结果的 key 为指定的列别名, 否则 key 为列名
+		String columnKey = action.columnAliasEnabled() && columnItem.isCustomAlias() ? columnItem.getAlias()
+				: treatColumn(columnName);
+		String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
+		JsonElement value = getValue(originalData, recordKey, columnName);
 		// 返回 key(列) 分3种情况
 		// 1. 指定了列别名的情况下, key 为指定的列别名. 例: column as alias
 		// 2. 只指定了列的情况下的情况下, key 为自动列名. 例: column
