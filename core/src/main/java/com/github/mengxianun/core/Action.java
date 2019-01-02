@@ -181,6 +181,10 @@ public class Action {
 		return operation != null && operation == Operation.DELETE;
 	}
 
+	public boolean isJoin() {
+		return !joinItems.isEmpty();
+	}
+
 	public boolean isLimit() {
 		return limitItem != null;
 	}
