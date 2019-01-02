@@ -249,7 +249,7 @@ public class JdbcDataContext extends AbstractDataContext {
 			}
 		} catch (SQLException e) {
 			logger.error(ResultStatus.DATASOURCE_SQL_FAILED.message(), e);
-			throw new JdbcDataException(ResultStatus.DATASOURCE_SQL_FAILED.fill(sql));
+			throw new JdbcDataException(ResultStatus.DATASOURCE_SQL_FAILED.fill(e.getMessage()));
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("SQL: {}", sql);

@@ -111,74 +111,68 @@ public class DefaultTranslator extends AbstractTranslator {
 
 		JsonElement result = null;
 
-		try {
 //			JsonObject jsonData = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
 //			JsonParser jsonParser = new JsonParser(jsonData, this);
 //			jsonParser.parse();
-			// -------------------------
-			// 添加额外过滤条件, 待优化
-			// -------------------------
-			if (filterExpressions != null && filterExpressions.length > 0) {
-				Arrays.asList(filterExpressions).forEach(jsonParser::addFilter);
-			}
-			if (jsonParser.isStruct()) {
-				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
-				Table table = tableItem.getTable();
-				result = new Gson().toJsonTree(table);
-			} else if (jsonParser.isTransaction()) {
-				JsonObject jsonData = jsonParser.getJsonData();
-				JsonArray transactionArray = jsonData.getAsJsonArray(JsonAttributes.TRANSACTION);
-				List<Action> actions = new ArrayList<>();
-				DataContext dataContext = null;
-				for (int i = 0; i < transactionArray.size(); i++) {
-					JsonObject innerJsonData = transactionArray.get(i).getAsJsonObject();
-					JsonParser innerJsonParser = new JsonParser(innerJsonData, this);
-					innerJsonParser.parse();
-					Action action = innerJsonParser.getAction();
-					action.build();
-					actions.add(action);
-					// 将第一个Json操作的数据源作为整个事务数据源. 暂时不支持跨数据源事务
-					if (i == 0) {
-						dataContext = innerJsonParser.getDataContext();
-					}
-				}
-				if (dataContext != null) {
-					result = dataContext.action(actions.toArray(new Action[] {}));
-				}
-			} else if (jsonParser.isNative()) {
-				TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
-				Table table = tableItem.getTable();
-				result = jsonParser.getDataContext().executeNative(table, jsonParser.getNativeContent());
-			} else if (jsonParser.isTemplate()) {
-				// to do
-			} else if (jsonParser.isResultFile()) {
-				// to do
-			} else {
-				Action action = jsonParser.getAction();
+		// -------------------------
+		// 添加额外过滤条件, 待优化
+		// -------------------------
+		if (filterExpressions != null && filterExpressions.length > 0) {
+			Arrays.asList(filterExpressions).forEach(jsonParser::addFilter);
+		}
+		if (jsonParser.isStruct()) {
+			TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
+			Table table = tableItem.getTable();
+			result = new Gson().toJsonTree(table);
+		} else if (jsonParser.isTransaction()) {
+			JsonObject jsonData = jsonParser.getJsonData();
+			JsonArray transactionArray = jsonData.getAsJsonArray(JsonAttributes.TRANSACTION);
+			List<Action> actions = new ArrayList<>();
+			DataContext dataContext = null;
+			for (int i = 0; i < transactionArray.size(); i++) {
+				JsonObject innerJsonData = transactionArray.get(i).getAsJsonObject();
+				JsonParser innerJsonParser = new JsonParser(innerJsonData, this);
+				innerJsonParser.parse();
+				Action action = innerJsonParser.getAction();
 				action.build();
-				result = jsonParser.getDataContext().action(action);
-				result = new DataRenderer().render(result, action);
-				if (action.isLimit()) {
-					LimitItem limitItem = action.getLimitItem();
-					long start = limitItem.getStart();
-					long end = limitItem.getEnd();
-					JsonElement countElement = jsonParser.getDataContext().action(action.count());
-					JsonObject countObject = countElement.getAsJsonObject();
-					String countKey = countObject.has(ResultAttributes.COUNT) ? ResultAttributes.COUNT
-							: ResultAttributes.COUNT.toUpperCase();
-					long count = countObject.get(countKey).getAsLong();
-					JsonObject pageResult = new JsonObject();
-					pageResult.addProperty(ResultAttributes.START, start);
-					pageResult.addProperty(ResultAttributes.END, end);
-					pageResult.addProperty(ResultAttributes.TOTAL, count);
-					pageResult.add(ResultAttributes.DATA, result);
-					return pageResult;
+				actions.add(action);
+				// 将第一个Json操作的数据源作为整个事务数据源. 暂时不支持跨数据源事务
+				if (i == 0) {
+					dataContext = innerJsonParser.getDataContext();
 				}
 			}
-		} catch (DataException e) {
-			throw e;
-		} catch (Exception e) {
-			throw e;
+			if (dataContext != null) {
+				result = dataContext.action(actions.toArray(new Action[] {}));
+			}
+		} else if (jsonParser.isNative()) {
+			TableItem tableItem = jsonParser.getAction().getTableItems().get(0);
+			Table table = tableItem.getTable();
+			result = jsonParser.getDataContext().executeNative(table, jsonParser.getNativeContent());
+		} else if (jsonParser.isTemplate()) {
+			// to do
+		} else if (jsonParser.isResultFile()) {
+			// to do
+		} else {
+			Action action = jsonParser.getAction();
+			action.build();
+			result = jsonParser.getDataContext().action(action);
+			result = new DataRenderer().render(result, action);
+			if (action.isLimit()) {
+				LimitItem limitItem = action.getLimitItem();
+				long start = limitItem.getStart();
+				long end = limitItem.getEnd();
+				JsonElement countElement = jsonParser.getDataContext().action(action.count());
+				JsonObject countObject = countElement.getAsJsonObject();
+				String countKey = countObject.has(ResultAttributes.COUNT) ? ResultAttributes.COUNT
+						: ResultAttributes.COUNT.toUpperCase();
+				long count = countObject.get(countKey).getAsLong();
+				JsonObject pageResult = new JsonObject();
+				pageResult.addProperty(ResultAttributes.START, start);
+				pageResult.addProperty(ResultAttributes.END, end);
+				pageResult.addProperty(ResultAttributes.TOTAL, count);
+				pageResult.add(ResultAttributes.DATA, result);
+				return pageResult;
+			}
 		}
 		return result;
 	}
