@@ -1037,9 +1037,10 @@ public class JsonParser {
 		} else {
 			JsonObject values = (JsonObject) valuesElement;
 			for (String columnName : values.keySet()) {
-				String value = values.getAsJsonPrimitive(columnName).getAsString();
 				Column column = findColumn(columnName);
 				if (column != null) {
+					JsonElement valueElement = values.get(columnName);
+					String value = valueElement.isJsonNull() ? null : valueElement.getAsString();
 					action.addValueItem(new ValueItem(column, value));
 				}
 			}
