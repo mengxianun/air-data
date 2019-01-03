@@ -58,7 +58,15 @@ public class SQLBuilder {
 	// 关联分页查询的情况, SQL 语句构建做特殊处理
 	protected boolean joinLimit;
 	protected List<FilterItem> joinLimitFilterItems = new ArrayList<>();
-	protected String limitString;
+	// 拼接后的字符串
+	protected String columnString = "";
+	protected String tableString = "";
+	protected String joinString = "";
+	protected String whereString = "";
+	protected String groupString = "";
+	protected String orderString = "";
+	protected String limitString = "";
+	protected String valueString = "";
 
 	public SQLBuilder(Action action) {
 		this.action = action;
@@ -132,7 +140,7 @@ public class SQLBuilder {
 				comma = true;
 			}
 		}
-		return columnsBuilder.toString();
+		return columnString = columnsBuilder.toString();
 	}
 
 	public String toSelectTables() {
@@ -176,7 +184,7 @@ public class SQLBuilder {
 			}
 			comma = true;
 		}
-		return tablesBuilder.toString();
+		return tableString = tablesBuilder.toString();
 	}
 
 	public String toJoins() {
@@ -242,7 +250,7 @@ public class SQLBuilder {
 			}
 
 		}
-		return joinsBuilder.toString();
+		return joinString = joinsBuilder.toString();
 	}
 
 	public String toWhere() {
@@ -264,7 +272,7 @@ public class SQLBuilder {
 			whereBuilder.append(filterSql);
 			first = false;
 		}
-		return whereBuilder.toString();
+		return whereString = whereBuilder.toString();
 	}
 
 	public String toFilter(FilterItem filterItem) {
@@ -335,7 +343,7 @@ public class SQLBuilder {
 			groupsBuilder.append(spliceColumn(columnItem));
 			comma = true;
 		}
-		return groupsBuilder.toString();
+		return groupString = groupsBuilder.toString();
 	}
 
 	public String toOrders() {
@@ -363,7 +371,7 @@ public class SQLBuilder {
 			}
 			comma = true;
 		}
-		return ordersBuilder.toString();
+		return orderString = ordersBuilder.toString();
 	}
 
 	public String toLimit() {
@@ -386,7 +394,7 @@ public class SQLBuilder {
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_INSERT_INTO);
 		Table table = tableItems.get(0).getTable();
 		tableBuilder.append(spliceTable(table));
-		return tableBuilder.toString();
+		return tableString = tableBuilder.toString();
 
 	}
 
@@ -411,14 +419,14 @@ public class SQLBuilder {
 		tempColumnsBuilder.append(")");
 		tempValuesBuilder.append(")");
 		valuesBuilder.append(tempColumnsBuilder).append(tempValuesBuilder);
-		return valuesBuilder.toString();
+		return valueString = valuesBuilder.toString();
 	}
 
 	public String toUpdateTable() {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_UPDATE);
 		tableBuilder.append(spliceTable(tableItems.get(0)));
-		return tableBuilder.toString();
+		return tableString = tableBuilder.toString();
 	}
 
 	public String toUpdateValues() {
@@ -435,14 +443,14 @@ public class SQLBuilder {
 			params.add(value);
 			comma = true;
 		}
-		return valuesBuilder.toString();
+		return valueString = valuesBuilder.toString();
 	}
 
 	public String toDeleteTable() {
 		List<TableItem> tableItems = action.getTableItems();
 		StringBuilder tableBuilder = new StringBuilder(PREFIX_DELETE_FROM);
 		tableBuilder.append(spliceTable(tableItems.get(0)));
-		return tableBuilder.toString();
+		return tableString = tableBuilder.toString();
 	}
 
 	public String deleteFirstConnector(String sql, Connector connector) {
@@ -551,13 +559,30 @@ public class SQLBuilder {
 	}
 
 	public String countSql() {
+		// 主表列
+		StringBuilder columnsBuilder = new StringBuilder();
+		TableItem mainTableItem = action.getTableItems().get(0);
+		Table mainTable = mainTableItem.getTable();
+		String tablePrefix = Strings.isNullOrEmpty(mainTableItem.getAlias()) ? mainTable.getName()
+				: mainTableItem.getAlias();
+		if (dialect.tableAliasEnabled()) {
+			columnsBuilder.append(tablePrefix).append(".");
+		}
+		String mainColumnString = columnsBuilder.append(COLUMN_ALL).toString();
+		StringBuilder originalBuilder = new StringBuilder();
+		// 原始SQL
+		// 1. 只查询主表的列
+		// 2. 去掉 LIMIT 条件
+		String originalSql = originalBuilder.append(PREFIX_SELECT).append("distinct ").append(mainColumnString)
+				.append(" ")
+				.append(tableString).append(joinString)
+				.append(whereString).append(groupString).toString();
+		originalSql = originalSql.replace(Strings.nullToEmpty(limitString), "");
 		StringBuilder countBuilder = new StringBuilder();
-		// 去掉 limit 部分的SQL
-		String notLimitSql = sql.replace(Strings.nullToEmpty(limitString), "");
 		StringBuilder countSql = countBuilder.append(PREFIX_SELECT).append(COUNT).append(ALIAS_KEY).append("count")
 				.append(PREFIX_FROM)
 				.append("(")
-				.append(notLimitSql)
+				.append(originalSql)
 				.append(")").append(ALIAS_KEY).append("original_table");
 		return countSql.toString();
 	}
