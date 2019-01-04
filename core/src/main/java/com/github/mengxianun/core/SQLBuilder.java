@@ -254,7 +254,7 @@ public class SQLBuilder {
 	}
 
 	public String toWhere() {
-		return joinLimit ? toWhere(joinLimitFilterItems) : toWhere(action.getFilterItems());
+		return whereString = joinLimit ? toWhere(joinLimitFilterItems) : toWhere(action.getFilterItems());
 	}
 
 	public String toWhere(List<FilterItem> filterItems) {
@@ -272,7 +272,7 @@ public class SQLBuilder {
 			whereBuilder.append(filterSql);
 			first = false;
 		}
-		return whereString = whereBuilder.toString();
+		return whereBuilder.toString();
 	}
 
 	public String toFilter(FilterItem filterItem) {
