@@ -248,8 +248,13 @@ public class JdbcDataContext extends AbstractDataContext {
 				result = jsonObject;
 			}
 		} catch (SQLException e) {
-			logger.error(ResultStatus.DATASOURCE_SQL_FAILED.message(), e);
-			throw new JdbcDataException(ResultStatus.DATASOURCE_SQL_FAILED.fill(e.getMessage()));
+			Throwable realReasion = e;
+			SQLException nextException = e.getNextException();
+			if (nextException != null && nextException.getCause() != null) {
+				realReasion = nextException.getCause();
+			}
+			logger.error(ResultStatus.DATASOURCE_SQL_FAILED.message(), realReasion);
+			throw new JdbcDataException(ResultStatus.DATASOURCE_SQL_FAILED.fill(realReasion.getMessage()));
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("SQL: {}", sql);
