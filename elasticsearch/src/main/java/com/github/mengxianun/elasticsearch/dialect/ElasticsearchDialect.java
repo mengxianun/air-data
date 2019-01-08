@@ -24,6 +24,11 @@ public class ElasticsearchDialect implements Dialect {
 	}
 
 	@Override
+	public boolean validTableExists() {
+		return false;
+	}
+
+	@Override
 	public boolean quoteTable() {
 		return false;
 	}

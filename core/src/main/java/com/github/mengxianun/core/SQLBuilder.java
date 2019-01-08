@@ -504,7 +504,10 @@ public class SQLBuilder {
 				if (!Strings.isNullOrEmpty(tableAlias)) {
 					columnBuilder.append(tableAlias);
 				} else {
-					columnBuilder.append(tableItem.getTable().getName());
+					Table table = tableItem.getTable();
+					if (table != null) {
+						columnBuilder.append(table.getName());
+					}
 				}
 				columnBuilder.append(".");
 			}
@@ -532,7 +535,10 @@ public class SQLBuilder {
 				if (!Strings.isNullOrEmpty(tableAlias)) {
 					columnBuilder.append(tableAlias);
 				} else {
-					columnBuilder.append(tableItem.getTable().getName());
+					Table table = tableItem.getTable();
+					if (table != null) {
+						columnBuilder.append(table.getName());
+					}
 				}
 				columnBuilder.append(".");
 			}

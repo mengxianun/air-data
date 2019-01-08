@@ -107,9 +107,13 @@ public class DataRenderer {
 					}
 				}
 			} else {
-				List<ColumnItem> columnItems = action.getColumnItems();
-				for (ColumnItem columnItem : columnItems) {
-					addColumnValue(uniqueRecord, columnItem, record, action);
+				if (action.isQueryAllColumns()) {
+					addAllColumnValue(uniqueRecord, record);
+				} else {
+					List<ColumnItem> columnItems = action.getColumnItems();
+					for (ColumnItem columnItem : columnItems) {
+						addColumnValue(uniqueRecord, columnItem, record, action);
+					}
 				}
 			}
 		}
@@ -231,12 +235,23 @@ public class DataRenderer {
 		// 如果请求中指定了列别名, 则返回结果的 key 为指定的列别名, 否则 key 为列名
 		String columnKey = action.columnAliasEnabled() && columnItem.isCustomAlias() ? columnItem.getAlias()
 				: treatColumn(columnName);
-		String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
-		JsonElement value = getValue(originalData, recordKey, columnName);
 		// 返回 key(列) 分3种情况
 		// 1. 指定了列别名的情况下, key 为指定的列别名. 例: column as alias
 		// 2. 只指定了列的情况下的情况下, key 为自动列名. 例: column
 		// 3. 列为表达式, 非具体字段, key 为自动生成的别名. 例: count(*)
+		String recordKey = Strings.isNullOrEmpty(columnItem.getAlias()) ? columnKey : columnItem.getAlias();
+		JsonElement value = getValue(originalData, recordKey, columnName);
+		addColumnValue(record, column, columnKey, value);
+	}
+
+	public void addAllColumnValue(JsonObject record, JsonObject originalData) {
+		for (String key : originalData.keySet()) {
+			JsonElement value = originalData.get(key);
+			addColumnValue(record, null, key, value);
+		}
+	}
+
+	public void addColumnValue(JsonObject record, Column column, String columnKey, JsonElement value) {
 		if (value == null || value.isJsonNull()) {
 			record.addProperty(columnKey, (String) null);
 		} else {
@@ -277,14 +292,23 @@ public class DataRenderer {
 	}
 
 	public Number render(Column column, Number value) {
+		if (column == null) {
+			return value;
+		}
 		return value;
 	}
 
 	public Boolean render(Column column, Boolean value) {
+		if (column == null) {
+			return value;
+		}
 		return value;
 	}
 
 	public String render(Column column, String value) {
+		if (column == null) {
+			return value;
+		}
 		return value;
 	}
 

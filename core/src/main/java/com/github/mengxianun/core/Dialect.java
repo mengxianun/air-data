@@ -18,6 +18,15 @@ public interface Dialect {
 	}
 
 	/**
+	 * 验证数据库表是否存在
+	 * 
+	 * @return
+	 */
+	default boolean validTableExists() {
+		return true;
+	}
+
+	/**
 	 * 是否用引用符号包裹表和列. 例: select "column" from "table". 引用符号因数据库不同而不同, MySQL 为 '`'
 	 * 
 	 * @return

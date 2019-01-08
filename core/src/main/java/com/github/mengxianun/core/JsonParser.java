@@ -249,25 +249,30 @@ public class JsonParser {
 		String sourceName;
 		String tableName;
 		if (tableString.contains(".")) {
-			String[] tableSchema = tableString.split("\\.");
+			String[] tableSchema = tableString.split("\\.", 2);
 			sourceName = tableSchema[0];
 			tableName = tableSchema[1];
 		} else {
 			sourceName = translator.getDefaultDataSource();
 			tableName = tableString;
 		}
+		TableItem tableItem;
 		dataContext = translator.getDataContext(sourceName);
 		Table table = dataContext.getTable(tableName);
-		if (table == null) {
-			throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(tableName));
-		}
 		boolean customAlias = false;
 		if (Strings.isNullOrEmpty(alias)) {
 			alias = getTableAlias(table);
 		} else {
 			customAlias = true;
 		}
-		TableItem tableItem = new TableItem(table, alias, customAlias);
+		if (table == null) {
+			if (dataContext.getDialect().validTableExists()) {
+				throw new DataException(ResultStatus.DATASOURCE_TABLE_NOT_EXIST.fill(tableName));
+			}
+			tableItem = new TableItem(tableName, alias, customAlias);
+		} else {
+			tableItem = new TableItem(table, alias, customAlias);
+		}
 		// SQL 语句不指定表别名
 		if (isInsert() || isUpdate() || isDelete()) {
 			tableItem.setAlias(null);
@@ -588,6 +593,7 @@ public class JsonParser {
 	private void createAllColumns() {
 		createMainColumns();
 		createJoinColumns();
+		action.setQueryAllColumns(true);
 	}
 
 	/**
@@ -640,9 +646,16 @@ public class JsonParser {
 	}
 
 	private void createMainTableItemColumns(TableItem tableItem) {
-		List<Column> columns = tableItem.getTable().getColumns();
-		for (Column column : columns) {
-			action.addColumnItem(new ColumnItem(column, getColumnAlias(column), false, tableItem));
+		Table table = tableItem.getTable();
+		String expression = tableItem.getExpression();
+		if (table != null) {
+			List<Column> columns = table.getColumns();
+			for (Column column : columns) {
+				action.addColumnItem(new ColumnItem(column, getColumnAlias(column), false, tableItem));
+			}
+
+		} else if (!Strings.isNullOrEmpty(expression)) {
+			action.addColumnItem(new ColumnItem(SQLBuilder.COLUMN_ALL));
 		}
 	}
 
@@ -1133,7 +1146,11 @@ public class JsonParser {
 	private Column findMainColumn(String columnString) {
 		List<TableItem> tableItems = action.getTableItems();
 		for (TableItem tableItem : tableItems) {
-			List<Column> columns = tableItem.getTable().getColumns();
+			Table table = tableItem.getTable();
+			if (table == null) {
+				continue;
+			}
+			List<Column> columns = table.getColumns();
 			Optional<Column> optionalColumn = columns.stream().filter(c -> c.getName().equalsIgnoreCase(columnString))
 					.findFirst();
 			if (optionalColumn.isPresent()) {
@@ -1263,6 +1280,9 @@ public class JsonParser {
 	private String getTableAlias(Table table) {
 		Dialect dialect = dataContext.getDialect();
 		if (dialect.tableAliasEnabled() && dialect.randomAliasEnabled()) {
+			if (table == null) {
+				return getRandomAlias();
+			}
 			return getRandomAlias() + "_" + table.getName();
 		}
 		return null;
