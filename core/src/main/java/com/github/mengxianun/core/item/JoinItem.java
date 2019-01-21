@@ -4,12 +4,14 @@ import java.util.List;
 
 import com.github.mengxianun.core.json.JoinType;
 
-public class JoinItem {
+public class JoinItem extends Item {
 
+	private static final long serialVersionUID = 1L;
+	// 主表关联的列
 	private List<ColumnItem> leftColumns;
-
+	// 副表关联的列
 	private List<ColumnItem> rightColumns;
-
+	// 关联类型
 	private JoinType joinType;
 
 	public JoinItem(List<ColumnItem> leftColumns, List<ColumnItem> rightColumns) {

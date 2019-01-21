@@ -4,6 +4,7 @@ import com.github.mengxianun.core.schema.Table;
 
 public class TableItem extends Item {
 
+	private static final long serialVersionUID = 1L;
 	// 表属性
 	private Table table;
 	// 自定义表达式. 可以是表名, 子查询等

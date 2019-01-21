@@ -4,6 +4,7 @@ import com.github.mengxianun.core.schema.Column;
 
 public class ColumnItem extends Item {
 
+	private static final long serialVersionUID = 1L;
 	// 列属性
 	protected Column column;
 	// 自定义表达式. 可以是列名, 或者函数, 子查询等

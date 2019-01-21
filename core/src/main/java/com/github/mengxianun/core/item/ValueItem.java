@@ -2,10 +2,10 @@ package com.github.mengxianun.core.item;
 
 import com.github.mengxianun.core.schema.Column;
 
-public class ValueItem {
+public class ValueItem extends Item {
 
+	private static final long serialVersionUID = 1L;
 	private Column column;
-
 	private Object value;
 
 	public ValueItem(Column column, Object value) {

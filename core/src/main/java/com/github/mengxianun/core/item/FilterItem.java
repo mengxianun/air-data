@@ -6,8 +6,9 @@ import java.util.List;
 import com.github.mengxianun.core.json.Connector;
 import com.github.mengxianun.core.json.Operator;
 
-public class FilterItem {
+public class FilterItem extends Item {
 
+	private static final long serialVersionUID = 1L;
 	// 条件列
 	private ColumnItem columnItem;
 	// 条件值

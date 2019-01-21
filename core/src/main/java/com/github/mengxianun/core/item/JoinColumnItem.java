@@ -9,6 +9,7 @@ import com.github.mengxianun.core.schema.Table;
 
 public class JoinColumnItem extends ColumnItem {
 
+	private static final long serialVersionUID = 1L;
 	private AssociationType associationType;
 	// 关联的所有父表
 	private List<Table> parentTables = new ArrayList<>();

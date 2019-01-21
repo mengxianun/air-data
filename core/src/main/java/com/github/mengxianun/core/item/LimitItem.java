@@ -1,7 +1,8 @@
 package com.github.mengxianun.core.item;
 
-public class LimitItem {
+public class LimitItem extends Item {
 
+	private static final long serialVersionUID = 1L;
 	// 偏移量, 默认0.
 	private long offset = 0;
 	// 每页大小, 默认10
