@@ -161,10 +161,8 @@ public class SQLBuilder {
 					List<FilterItem> mainTableFilterItems = filterItems.stream()
 							.filter(e -> e.getColumnItem().getTableItem().getTable() == table)
 							.collect(Collectors.toList());
-					// 基础表查询属于新查询, 这里创建一个新的TableItem
-					TableItem subQueryTableItem = new TableItem(table);
-					mainTableFilterItems.forEach(e -> e.getColumnItem().setTableItem(subQueryTableItem));
-					String mainTableWhereString = toWhere(mainTableFilterItems);
+					// 基础表查询属于子查询, 内部条件 SQL 不指定表别名
+					String mainTableWhereString = toWhere(mainTableFilterItems, false);
 					tablesBuilder.append("(").append(PREFIX_SELECT).append("*").append(PREFIX_FROM)
 							.append(table.getName()).append(mainTableWhereString).append(toLimit())
 							.append(")");
@@ -258,13 +256,17 @@ public class SQLBuilder {
 	}
 
 	public String toWhere(List<FilterItem> filterItems) {
+		return toWhere(filterItems, null);
+	}
+
+	public String toWhere(List<FilterItem> filterItems, Boolean assignTableAlias) {
 		if (filterItems.isEmpty()) {
 			return "";
 		}
 		StringBuilder whereBuilder = new StringBuilder(PREFIX_WHERE);
 		boolean first = true;
 		for (FilterItem filterItem : filterItems) {
-			String filterSql = toFilter(filterItem);
+			String filterSql = toFilter(filterItem, assignTableAlias);
 			if (first) {
 				// 去掉开头的连接符
 				filterSql = deleteFirstConnector(filterSql, filterItem.getConnector());
@@ -276,6 +278,10 @@ public class SQLBuilder {
 	}
 
 	public String toFilter(FilterItem filterItem) {
+		return toFilter(filterItem, null);
+	}
+
+	public String toFilter(FilterItem filterItem, Boolean assignTableAlias) {
 		StringBuilder filterBuilder = new StringBuilder();
 		filterBuilder.append(" ").append(filterItem.getConnector()).append(" ");
 		// 嵌套子条件
@@ -290,9 +296,7 @@ public class SQLBuilder {
 			return filterBuilder.toString();
 		}
 		ColumnItem columnItem = filterItem.getColumnItem();
-		// filterBuilder.append(action.isSelect() ? spliceCondColumn(columnItem) :
-		// spliceColumn(columnItem));
-		filterBuilder.append(spliceColumn(columnItem));
+		filterBuilder.append(spliceColumn(columnItem, assignTableAlias));
 		filterBuilder.append(" ");
 		Object value = filterItem.getValue();
 		Operator operator = filterItem.getOperator();
@@ -486,19 +490,23 @@ public class SQLBuilder {
 		return tableBuilder.toString();
 	}
 
+	public String spliceColumn(ColumnItem columnItem) {
+		return spliceColumn(columnItem, null);
+	}
+
 	/**
-	 * 拼接列 在启动了表别名的而情况下, 如果所属表指定了别名, 以表别名作为前缀, 否则以表名作为前缀. 如果没有启动表别名, 不添加前缀
+	 * 拼接列 在启动了表别名的情况下, 如果所属表指定了别名, 以表别名作为前缀, 否则以表名作为前缀. 如果没有启动表别名, 不添加前缀
 	 * 
 	 * @param columnItem
 	 * @return
 	 */
-	public String spliceColumn(ColumnItem columnItem) {
+	public String spliceColumn(ColumnItem columnItem, Boolean assignTableAlias) {
 		StringBuilder columnBuilder = new StringBuilder();
 		Column column = columnItem.getColumn();
 		if (column == null) {
 			columnBuilder.append(columnItem.getExpression());
 		} else {
-			if (dialect.tableAliasEnabled()) {
+			if (dialect.tableAliasEnabled() && (assignTableAlias == null || assignTableAlias)) {
 				TableItem tableItem = columnItem.getTableItem();
 				String tableAlias = tableItem.getAlias();
 				if (!Strings.isNullOrEmpty(tableAlias)) {
