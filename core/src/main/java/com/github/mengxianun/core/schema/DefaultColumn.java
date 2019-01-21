@@ -4,13 +4,14 @@ import com.google.gson.JsonObject;
 
 public class DefaultColumn implements Column {
 
+	private static final long serialVersionUID = 1L;
 	private String name;
 	private Table table;
 	private Boolean nullable;
 	private String remarks;
 	private Integer columnSize;
 	private Column relationColumn;
-	// 自定义配置i信息
+	// 自定义配置信息
 	private JsonObject config = new JsonObject();
 
 	public DefaultColumn() {
