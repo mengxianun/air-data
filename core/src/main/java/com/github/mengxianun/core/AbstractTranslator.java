@@ -86,7 +86,7 @@ public abstract class AbstractTranslator implements Translator {
 			configuration.addProperty(ConfigAttributes.CONFIG_FILE, configFile);
 			return configFileURL;
 		} catch (Exception e) {
-			logger.error(String.format("config file [%s] parse error", configFile), e);
+			logger.error(String.format("Config file [%s] parse error", configFile), e);
 		}
 		return null;
 	}
@@ -101,7 +101,7 @@ public abstract class AbstractTranslator implements Translator {
 			}
 			createDataContext();
 		} catch (IOException e) {
-			logger.error(String.format("config file [%s] parse error", configFileURL), e);
+			logger.error(String.format("Config file [%s] parse error", configFileURL), e);
 		}
 	}
 
@@ -167,6 +167,10 @@ public abstract class AbstractTranslator implements Translator {
 	 */
 	private void readTablesConfig(String tablesConfigPath) {
 		URL tablesConfigURL = Thread.currentThread().getContextClassLoader().getResource(tablesConfigPath);
+		if (tablesConfigURL == null) {
+			logger.warn("Not found table config [{}]", tablesConfigPath);
+			return;
+		}
 		File tablesConfigFile;
 		try {
 			tablesConfigFile = new File(tablesConfigURL.toURI());
